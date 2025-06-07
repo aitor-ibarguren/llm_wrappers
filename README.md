@@ -1,6 +1,13 @@
 # LLM Wrapper
 
-[![Build](https://github.com/aitor-ibarguren/llm_wrappers/actions/workflows/build.yml/badge.svg)](https://github.com/aitor-ibarguren/llm_wrappers/actions/workflows/build.yml)
+<p>
+  <a href="https://github.com/aitor-ibarguren/llm_wrappers/actions/workflows/build.yml">
+    <img src="https://github.com/aitor-ibarguren/llm_wrappers/actions/workflows/build.yml/badge.svg" alt="Build">
+  </a>
+  <a href="https://opensource.org/licenses/Apache-2.0">
+    <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License">
+  </a>
+</p>
 
 This repository contains Python classes to load, manage, export, and fine-tune LLMs, facilitating its use in applications.
 
