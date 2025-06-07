@@ -86,7 +86,7 @@ class FlanT5Wrapper:
         self._tokenizer.save_pretrained(folder)
 
         return True
-    
+
     def clear_model(self) -> bool:
         # Erase model & tokenizer
         self._model = None

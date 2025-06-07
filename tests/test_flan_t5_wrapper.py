@@ -8,7 +8,7 @@ if __name__ == "__main__" or __package__ is None:
         os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
     )
 
-from flan_t5_wrapper.flan_t5_wrapper import FlanT5Wrapper
+from flan_t5_wrapper import FlanT5Wrapper
 
 
 class TestFlanT5Wrapper(unittest.TestCase):
