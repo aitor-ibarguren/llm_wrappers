@@ -95,3 +95,47 @@ class FlanT5Wrapper:
         self._model_init = False
 
         return True
+
+    def generate(self, input_text: str) -> tuple[bool, str]:
+        # Check if already loaded
+        if not self._model_init:
+            print(self._RED + "Model not loaded yet!" + self._RST)
+            return False
+
+        # Tokenize input text
+        input_tokenized = self._tokenizer(input_text, return_tensors='pt')
+
+        # Get generated output
+        output_ids = self._model.generate(
+            input_tokenized["input_ids"],
+            max_new_tokens=50,
+        )
+
+        output = self._tokenizer.decode(output_ids[0],
+                                        skip_special_tokens=True)
+
+        # Return
+        return True, output
+
+    def generate_list(self, input_texts: list[str]) -> tuple[bool, list[str]]:
+        # Check if already loaded
+        if not self._model_init:
+            print(self._RED + "Model not loaded yet!" + self._RST)
+            return False
+
+        # Tokenize input text
+        inputs_tokenized = self._tokenizer(input_texts, padding=True,
+                                           truncation=True,
+                                           return_tensors='pt')
+
+        # Get generated output
+        output_ids = self._model.generate(
+            inputs_tokenized["input_ids"],
+            max_new_tokens=50,
+        )
+
+        outputs = self._tokenizer.batch_decode(output_ids,
+                                               skip_special_tokens=True)
+
+        # Return
+        return True, outputs

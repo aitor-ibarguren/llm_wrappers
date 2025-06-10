@@ -38,6 +38,31 @@ class TestFlanT5Wrapper(unittest.TestCase):
         # Try to load non-existent folder
         self.assertTrue(not flan_t5_wrapper.load_stored_model("./no-model"))
 
+    def test_generate(self):
+        # Create wrapper
+        flan_t5_wrapper = FlanT5Wrapper()
+        # Check if pretrained model loads
+        self.assertTrue(flan_t5_wrapper.load_pretrained_model())
+        # Generate output
+        input = "The result of this Python unit test will be successful or not?"
+        res, output = flan_t5_wrapper.generate(input)
+        print("INPUT: " + input)
+        print("OUTPUT: " + output)
+        self.assertTrue(res and len(output) > 0)
+        # Generate output from list
+        inputs = [
+            "Answer the following question: "
+            "Is Paris in France?",
+            "Answer the following question: "
+            "Is Python a programming language?"
+        ]
+        res, outputs = flan_t5_wrapper.generate_list(inputs)
+        for input_str, output_str in zip(inputs, outputs):
+            print("*******")
+            print("INPUTS: " + input_str)
+            print("OUTPUTS: " + output_str)
+        self.assertTrue(res and len(outputs) == 2)
+
 
 if __name__ == "__main__":
     unittest.main()
