@@ -111,12 +111,12 @@ class FlanT5Wrapper:
             max_new_tokens=50,
         )
 
-        output = self._tokenizer.decode(output_ids[0], 
+        output = self._tokenizer.decode(output_ids[0],
                                         skip_special_tokens=True)
 
         # Return
         return True, output
-    
+
     def generate_list(self, input_texts: list[str]) -> tuple[bool, list[str]]:
         # Check if already loaded
         if not self._model_init:
