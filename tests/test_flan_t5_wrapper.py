@@ -49,6 +49,19 @@ class TestFlanT5Wrapper(unittest.TestCase):
         print("INPUT: " + input)
         print("OUTPUT: " + output)
         self.assertTrue(res and len(output) > 0)
+        # Generate output from list
+        inputs = [
+            "Answer the following question: "
+            "Is Paris in France?",
+            "Answer the following question: "
+            "Is Python a programming language?"
+        ]
+        res, outputs = flan_t5_wrapper.generate_list(inputs)
+        for input_str, output_str in zip(inputs, outputs):
+            print("*******")
+            print("INPUTS: " + input_str)
+            print("OUTPUTS: " + output_str)
+        self.assertTrue(res and len(outputs) == 2)
 
 
 if __name__ == "__main__":
