@@ -1,6 +1,8 @@
 import os
 import torch
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+from datasets import DatasetDict, load_dataset
+from transformers import (AutoTokenizer, AutoModelForSeq2SeqLM,
+                          Trainer, TrainingArguments)
 
 
 class FlanT5Wrapper:
@@ -139,3 +141,67 @@ class FlanT5Wrapper:
 
         # Return
         return True, outputs
+
+    def tokenize_function(self, dataset, training_column_id: str,
+                          label_column_id: str):
+        dataset['input_ids'] = self._tokenizer(dataset[training_column_id],
+                                               padding="max_length",
+                                               truncation=True,
+                                               return_tensors="pt").input_ids
+        dataset['labels'] = self._tokenizer(dataset[label_column_id],
+                                            padding="max_length",
+                                            truncation=True,
+                                            return_tensors="pt").input_ids
+
+        return dataset
+
+    def train_model(self, dataset: DatasetDict, training_column_id: str,
+                    label_column_id: str) -> bool:
+        # Tokenize datasets training & label columns
+        tokenized_datasets = dataset.map(
+            lambda dataset: self.tokenize_function(
+                dataset,
+                training_column_id,
+                label_column_id
+            ),
+            batched=True
+        )
+
+        # Remove unnecessary columns
+        column_ids = list(dataset['train'].features.keys())
+        column_ids = [f for f in column_ids if f not in ['input_ids', 'labels']]
+        tokenized_datasets = tokenized_datasets.remove_columns(column_ids)
+
+        # Divide in training & validation sets
+        tokenized_datasets = tokenized_datasets["train"]
+        tokenized_split_dataset = tokenized_datasets.train_test_split(test_size=0.2, seed=42)
+
+        tokenized_datasets = DatasetDict({
+            "train": tokenized_split_dataset["train"],
+            "validation": tokenized_split_dataset["test"]
+        })
+
+        # Training args
+        training_args = TrainingArguments(
+            output_dir="./trained_model",
+            learning_rate=1e-5,
+            num_train_epochs=1,
+            weight_decay=0.01,
+            logging_steps=1,
+            max_steps=1
+        )
+
+        # Trainer
+        trainer = Trainer(
+            model=self._model,
+            args=training_args,
+            train_dataset=tokenized_datasets['train'],
+            eval_dataset=tokenized_datasets['validation']
+        )
+
+        # Train
+        print("Starting model training...")
+        trainer.train()
+        print("Training finished!")
+
+        return True

@@ -1,6 +1,7 @@
 certifi
 charset-normalizer
 colorama
+datasets
 filelock
 fsspec
 huggingface-hub
