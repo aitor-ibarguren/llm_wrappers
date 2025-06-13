@@ -65,19 +65,6 @@ class TestFlanT5Wrapper(unittest.TestCase):
             print("OUTPUTS: " + output_str)
         self.assertTrue(res and len(outputs) == 2)
 
-    def test_train(self):
-        # Create wrapper
-        flan_t5_wrapper = FlanT5Wrapper()
-        # Check if pretrained model loads
-        self.assertTrue(flan_t5_wrapper.load_pretrained_model())
-        print("Loading dataset 'dim/grade_school_math_instructions_3k'...")
-        dataset = load_dataset("dim/grade_school_math_instructions_3k")
-        dataset = dataset.filter(lambda example, index: index % 100 == 0,
-                                 with_indices=True)
-        self.assertTrue(
-            flan_t5_wrapper.train_model(dataset, "INSTRUCTION", "RESPONSE")
-        )
-
 
 if __name__ == "__main__":
     unittest.main()

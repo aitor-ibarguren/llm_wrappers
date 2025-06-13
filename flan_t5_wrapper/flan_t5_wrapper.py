@@ -156,7 +156,7 @@ class FlanT5Wrapper:
         return dataset
 
     def train_model(self, dataset: DatasetDict, training_column_id: str,
-                    label_column_id: str) -> bool:
+                    label_column_id: str, trained_model_folder: str) -> bool:
         # Tokenize datasets training & label columns
         tokenized_datasets = dataset.map(
             lambda dataset: self.tokenize_function(
@@ -183,7 +183,7 @@ class FlanT5Wrapper:
 
         # Training args
         training_args = TrainingArguments(
-            output_dir="./trained_model",
+            output_dir=trained_model_folder,
             learning_rate=1e-5,
             num_train_epochs=1,
             weight_decay=0.01,
