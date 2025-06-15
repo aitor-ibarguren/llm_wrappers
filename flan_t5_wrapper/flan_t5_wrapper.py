@@ -1,6 +1,7 @@
 import os
 import torch
 from datasets import DatasetDict
+from peft import get_peft_model, LoraConfig, TaskType
 from transformers import (AutoTokenizer, AutoModelForSeq2SeqLM,
                           Trainer, TrainingArguments)
 
@@ -202,6 +203,69 @@ class FlanT5Wrapper:
         # Train
         print("Starting model training...")
         trainer.train()
+        print("Training finished!")
+
+        return True
+
+    def peft_train_model(self, dataset: DatasetDict, training_column_id: str,
+                         label_column_id: str,
+                         trained_model_folder: str) -> bool:
+        # Tokenize datasets training & label columns
+        tokenized_datasets = dataset.map(
+            lambda dataset: self.tokenize_function(
+                dataset,
+                training_column_id,
+                label_column_id
+            ),
+            batched=True
+        )
+
+        # Remove unnecessary columns
+        column_ids = list(dataset['train'].features.keys())
+        column_ids = [f for f in column_ids if f not in ['input_ids', 'labels']]
+        tokenized_datasets = tokenized_datasets.remove_columns(column_ids)
+
+        # Divide in training & validation sets
+        tokenized_datasets = tokenized_datasets["train"]
+        tokenized_split_dataset = tokenized_datasets.train_test_split(test_size=0.2, seed=42)
+
+        tokenized_datasets = DatasetDict({
+            "train": tokenized_split_dataset["train"],
+            "validation": tokenized_split_dataset["test"]
+        })
+
+        # LORA config
+        lora_config = LoraConfig(
+            r=32,  # Rank
+            lora_alpha=32,
+            target_modules=["q", "v"],
+            lora_dropout=0.05,
+            bias="none",
+            task_type=TaskType.SEQ_2_SEQ_LM  # FLAN-T5
+        )
+
+        peft_model = get_peft_model(self._model, lora_config)
+
+        # Training args
+        peft_training_args = TrainingArguments(
+            output_dir=trained_model_folder,
+            auto_find_batch_size=True,
+            learning_rate=1e-3,
+            num_train_epochs=1,
+            logging_steps=1,
+            max_steps=1
+        )
+
+        # Trainer
+        peft_trainer = Trainer(
+            model=peft_model,
+            args=peft_training_args,
+            train_dataset=tokenized_datasets["train"],
+        )
+
+        # Train
+        print("Starting model PEFT training...")
+        peft_trainer.train()
         print("Training finished!")
 
         return True
