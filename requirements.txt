@@ -12,7 +12,7 @@ filelock
 frozenlist
 fsspec
 huggingface-hub
-idna
+idna==3.10
 Jinja2
 MarkupSafe
 mpmath
@@ -22,6 +22,7 @@ networkx
 numpy
 packaging
 pandas
+peft
 propcache
 psutil
 pyarrow

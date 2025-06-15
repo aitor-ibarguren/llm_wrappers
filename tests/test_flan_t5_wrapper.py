@@ -1,7 +1,6 @@
 import os
 import sys
 import unittest
-from datasets import load_dataset
 
 
 if __name__ == "__main__" or __package__ is None:
