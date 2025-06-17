@@ -1,0 +1,42 @@
+name: Test and Coverage with Badge
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test-and-badge:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          pip install pytest pytest-cov coverage-badge
+
+      - name: Run tests and generate coverage
+        run: |
+          pytest --cov=your_package_name --cov-report=term --cov-report=xml
+
+      - name: Generate coverage badge
+        run: |
+          coverage-badge -o coverage.svg -f
+
+      - name: Commit coverage badge
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add coverage.svg
+          git commit -m "Update coverage badge" || echo "No changes to commit"
+          git push
