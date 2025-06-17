@@ -69,9 +69,6 @@ class FlanT5Wrapper:
         except OSError as e:
             print(f"{self._RED}OS error while loading: {e}{self._RST}")
             return False
-        except Exception as e:
-            print(f"{self._RED}Unexpected error: {e}{self._RST}")
-            return False
 
         # Model to GPU if available
         if torch.cuda.is_available():
@@ -103,9 +100,6 @@ class FlanT5Wrapper:
             return False
         except OSError as e:
             print(f"{self._RED}OS error while loading: {e}{self._RST}")
-            return False
-        except Exception as e:
-            print(f"{self._RED}Unexpected error: {e}{self._RST}")
             return False
 
         # Load PEFT model
@@ -145,7 +139,7 @@ class FlanT5Wrapper:
         # Check if already loaded
         if not self._model_init:
             print(self._RED + "Model not loaded yet!" + self._RST)
-            return False
+            return False, ""
 
         # Tokenize input text
         input_tokenized = self._tokenizer(input_text,
@@ -167,7 +161,7 @@ class FlanT5Wrapper:
         # Check if already loaded
         if not self._model_init:
             print(self._RED + "Model not loaded yet!" + self._RST)
-            return False
+            return False, ""
 
         # Tokenize input text
         inputs_tokenized = self._tokenizer(input_texts, padding=True,
