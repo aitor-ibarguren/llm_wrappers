@@ -19,16 +19,18 @@ def main():
     print("Loading dataset 'dim/grade_school_math_instructions_3k'...")
     dataset = load_dataset("dim/grade_school_math_instructions_3k")
 
-    flan_t5_wrapper.train_model(dataset, "INSTRUCTION", "RESPONSE",
-                                "./trained_flan_t5_school_math",
-                                5, 0.00025, True)
-    
+    flan_t5_wrapper.peft_lora_train_model(dataset, "INSTRUCTION", "RESPONSE",
+                                          "./peft_trained_flan_t5_school_math",
+                                          10.0, 1e-4, True)
+
     # Load trained model
-    trained_flan_t5_wrapper = FlanT5Wrapper()
-    trained_flan_t5_wrapper.load_stored_model("./trained_flan_t5_school_math")
+    peft_trained_flan_t5_wrapper = FlanT5Wrapper()
+    peft_trained_flan_t5_wrapper.load_stored_peft_model(
+        "./peft_trained_flan_t5_school_math"
+    )
     # Generate
-    res, trained_output = trained_flan_t5_wrapper.generate(input)
-    print("TRAINED OUTPUT: " + trained_output)
+    res, peft_trained_output = peft_trained_flan_t5_wrapper.generate(input)
+    print("PEFT TRAINED OUTPUT: " + peft_trained_output)
 
 
 if __name__ == "__main__":

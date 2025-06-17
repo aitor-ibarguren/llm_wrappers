@@ -2,7 +2,6 @@ import os
 import sys
 import unittest
 
-
 if __name__ == "__main__" or __package__ is None:
     sys.path.insert(
         0,

@@ -1,17 +1,20 @@
 import os
+
 import torch
 from datasets import DatasetDict
-from peft import get_peft_model, LoraConfig, TaskType
-from transformers import (AutoTokenizer, AutoModelForSeq2SeqLM,
-                          Trainer, TrainingArguments)
+from peft import LoraConfig, PeftModel, TaskType, get_peft_model
+from transformers import (AutoModelForSeq2SeqLM, AutoTokenizer,
+                          DataCollatorForSeq2Seq, Seq2SeqTrainer,
+                          Seq2SeqTrainingArguments)
 
 
 class FlanT5Wrapper:
 
     def __init__(self):
         # Init vars
-        self._model_name = "google/flan-t5-base"
+        self._model_name = "google/flan-t5-small"
         self._model_init = False
+        self._peft_model = False
 
         # Output vars
         self._RED = "\033[91m"
@@ -78,6 +81,45 @@ class FlanT5Wrapper:
 
         return True
 
+    def load_stored_peft_model(self, folder: str) -> bool:
+        # Check if already loaded
+        if self._model_init:
+            print(self._RED + "Model already loaded!" + self._RST)
+            return False
+
+        try:
+            # Check if path exists first (optional)
+            if not os.path.exists(folder):
+                raise FileNotFoundError(f"Folder '{folder}' not found")
+
+            # Load model
+            self._base_model = AutoModelForSeq2SeqLM.from_pretrained(
+                self._model_name
+            )
+            # Load tokenizer
+            self._tokenizer = AutoTokenizer.from_pretrained(self._model_name)
+        except FileNotFoundError as e:
+            print(f"{self._RED}Folder not found: {e}{self._RST}")
+            return False
+        except OSError as e:
+            print(f"{self._RED}OS error while loading: {e}{self._RST}")
+            return False
+        except Exception as e:
+            print(f"{self._RED}Unexpected error: {e}{self._RST}")
+            return False
+
+        # Load PEFT model
+        self._model = PeftModel.from_pretrained(self._base_model, folder)
+
+        # Model to GPU if available
+        if torch.cuda.is_available():
+            self._model.to(self._device)
+
+        self._model_init = True
+        self._peft_model = True
+
+        return True
+
     def save_model(self, folder: str) -> bool:
         # Check if already loaded
         if not self._model_init:
@@ -106,11 +148,12 @@ class FlanT5Wrapper:
             return False
 
         # Tokenize input text
-        input_tokenized = self._tokenizer(input_text, return_tensors='pt')
+        input_tokenized = self._tokenizer(input_text,
+                                          return_tensors='pt').to(self._device)
 
         # Get generated output
         output_ids = self._model.generate(
-            input_tokenized["input_ids"],
+            **input_tokenized,
             max_new_tokens=50,
         )
 
@@ -129,11 +172,12 @@ class FlanT5Wrapper:
         # Tokenize input text
         inputs_tokenized = self._tokenizer(input_texts, padding=True,
                                            truncation=True,
-                                           return_tensors='pt')
+                                           return_tensors='pt'
+                                           ).to(self._device)
 
         # Get generated output
         output_ids = self._model.generate(
-            inputs_tokenized["input_ids"],
+            **inputs_tokenized,
             max_new_tokens=50,
         )
 
@@ -145,19 +189,32 @@ class FlanT5Wrapper:
 
     def tokenize_function(self, dataset, training_column_id: str,
                           label_column_id: str):
-        dataset['input_ids'] = self._tokenizer(dataset[training_column_id],
-                                               padding="max_length",
-                                               truncation=True,
-                                               return_tensors="pt").input_ids
-        dataset['labels'] = self._tokenizer(dataset[label_column_id],
-                                            padding="max_length",
-                                            truncation=True,
-                                            return_tensors="pt").input_ids
+        # Tokenize inputs
+        model_inputs = self._tokenizer(
+            dataset[training_column_id],
+            padding="max_length",
+            truncation=True,
+            max_length=512
+        )
+        # Tokenize labels
+        labels = self._tokenizer(
+            dataset[label_column_id],
+            padding="max_length",
+            truncation=True,
+            max_length=128
+        )
 
-        return dataset
+        model_inputs["labels"] = labels["input_ids"]
+
+        return model_inputs
 
     def train_model(self, dataset: DatasetDict, training_column_id: str,
-                    label_column_id: str, trained_model_folder: str) -> bool:
+                    label_column_id: str, trained_model_folder: str,
+                    num_train_epochs=1, learning_rate=1e-4,
+                    logging=False) -> bool:
+        # Empty CUDA cache
+        torch.cuda.empty_cache()
+
         # Tokenize datasets training & label columns
         tokenized_datasets = dataset.map(
             lambda dataset: self.tokenize_function(
@@ -170,34 +227,44 @@ class FlanT5Wrapper:
 
         # Remove unnecessary columns
         column_ids = list(dataset['train'].features.keys())
-        column_ids = [f for f in column_ids if f not in ['input_ids', 'labels']]
+        column_ids = [f for f in column_ids if f not in [
+            'input_ids', 'labels']]
         tokenized_datasets = tokenized_datasets.remove_columns(column_ids)
 
         # Divide in training & validation sets
         tokenized_datasets = tokenized_datasets["train"]
-        tokenized_split_dataset = tokenized_datasets.train_test_split(test_size=0.2, seed=42)
+        tokenized_split_dataset = tokenized_datasets.train_test_split(
+            test_size=0.2, seed=42)
 
         tokenized_datasets = DatasetDict({
             "train": tokenized_split_dataset["train"],
             "validation": tokenized_split_dataset["test"]
         })
 
+        # Memory ooptimization
+        self._model.gradient_checkpointing_enable()
+        self._model.config.use_cache = False
+
         # Training args
-        training_args = TrainingArguments(
+        training_args = Seq2SeqTrainingArguments(
             output_dir=trained_model_folder,
-            learning_rate=1e-5,
-            num_train_epochs=1,
-            weight_decay=0.01,
-            logging_steps=1,
-            max_steps=1
+            num_train_epochs=num_train_epochs,
+            learning_rate=learning_rate,
+            logging_strategy="steps" if logging else "no",
+            logging_steps=10 if logging else 0
         )
 
         # Trainer
-        trainer = Trainer(
+        data_collator = DataCollatorForSeq2Seq(tokenizer=self._tokenizer,
+                                               model=self._model)
+
+        trainer = Seq2SeqTrainer(
             model=self._model,
             args=training_args,
-            train_dataset=tokenized_datasets['train'],
-            eval_dataset=tokenized_datasets['validation']
+            train_dataset=tokenized_datasets["train"],  # subset for testing
+            eval_dataset=tokenized_datasets["validation"],
+            tokenizer=self._tokenizer,
+            data_collator=data_collator
         )
 
         # Train
@@ -205,11 +272,19 @@ class FlanT5Wrapper:
         trainer.train()
         print("Training finished!")
 
+        # Save model
+        trainer.save_model()
+        self._tokenizer.save_pretrained(trained_model_folder)
+
         return True
 
-    def peft_train_model(self, dataset: DatasetDict, training_column_id: str,
-                         label_column_id: str,
-                         trained_model_folder: str) -> bool:
+    def peft_lora_train_model(self, dataset: DatasetDict,
+                              training_column_id: str, label_column_id: str,
+                              trained_model_folder: str, num_train_epochs=1,
+                              learning_rate=1e-4, logging=False) -> bool:
+        # Empty CUDA cache
+        torch.cuda.empty_cache()
+
         # Tokenize datasets training & label columns
         tokenized_datasets = dataset.map(
             lambda dataset: self.tokenize_function(
@@ -222,50 +297,64 @@ class FlanT5Wrapper:
 
         # Remove unnecessary columns
         column_ids = list(dataset['train'].features.keys())
-        column_ids = [f for f in column_ids if f not in ['input_ids', 'labels']]
+        column_ids = [f for f in column_ids if f not in [
+            'input_ids', 'labels']]
         tokenized_datasets = tokenized_datasets.remove_columns(column_ids)
 
         # Divide in training & validation sets
         tokenized_datasets = tokenized_datasets["train"]
-        tokenized_split_dataset = tokenized_datasets.train_test_split(test_size=0.2, seed=42)
+        tokenized_split_dataset = tokenized_datasets.train_test_split(
+            test_size=0.2, seed=42)
 
         tokenized_datasets = DatasetDict({
             "train": tokenized_split_dataset["train"],
             "validation": tokenized_split_dataset["test"]
         })
 
-        # LORA config
+        # PEFT LoRA config
         lora_config = LoraConfig(
-            r=32,  # Rank
-            lora_alpha=32,
-            target_modules=["q", "v"],
+            r=64,
+            lora_alpha=64,
+            target_modules=["q", "k", "v", "o"],
             lora_dropout=0.05,
             bias="none",
-            task_type=TaskType.SEQ_2_SEQ_LM  # FLAN-T5
+            task_type=TaskType.SEQ_2_SEQ_LM
         )
 
+        # Apply PEFT LoRA to the model
         peft_model = get_peft_model(self._model, lora_config)
+        peft_model.print_trainable_parameters()
+
+        # Data collator
+        data_collator = DataCollatorForSeq2Seq(self._tokenizer,
+                                               model=peft_model)
 
         # Training args
-        peft_training_args = TrainingArguments(
+        peft_training_args = Seq2SeqTrainingArguments(
             output_dir=trained_model_folder,
             auto_find_batch_size=True,
-            learning_rate=1e-3,
-            num_train_epochs=1,
-            logging_steps=1,
-            max_steps=1
+            num_train_epochs=num_train_epochs,
+            learning_rate=learning_rate,
+            logging_strategy="steps" if logging else "no",
+            logging_steps=10 if logging else 0
         )
 
         # Trainer
-        peft_trainer = Trainer(
+        peft_trainer = Seq2SeqTrainer(
             model=peft_model,
             args=peft_training_args,
             train_dataset=tokenized_datasets["train"],
+            eval_dataset=tokenized_datasets["validation"],
+            data_collator=data_collator
         )
 
         # Train
         print("Starting model PEFT training...")
         peft_trainer.train()
         print("Training finished!")
+
+        # Save model
+        peft_trainer.save_model()
+        self._tokenizer.save_pretrained(trained_model_folder)
 
         return True
