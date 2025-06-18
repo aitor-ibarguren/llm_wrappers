@@ -7,7 +7,7 @@
   <a href="https://github.com/aitor-ibarguren/llm_wrappers/actions/workflows/isort.yml">
     <img src="https://github.com/aitor-ibarguren/llm_wrappers/actions/workflows/isort.yml/badge.svg" alt="isort">
   </a>
-  <a href="coverage-summary.txt">
+  <a href="https://app.codecov.io/gh/aitor-ibarguren/llm_wrappers">
     <img src="coverage-badge.svg" alt="Build">
   </a>
   <a href="https://opensource.org/licenses/Apache-2.0">
