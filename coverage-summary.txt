@@ -13,7 +13,7 @@ tests/test_flan_t5_wrapper.py::TestFlanT5Wrapper::test_train_model
     warnings.warn(warn_msg)
 
 tests/test_flan_t5_wrapper.py::TestFlanT5Wrapper::test_train_model
-  /home/runner/work/llm_wrappers/llm_wrappers/flan_t5_wrapper/flan_t5_wrapper.py:255: FutureWarning: `tokenizer` is deprecated and will be removed in version 5.0.0 for `Seq2SeqTrainer.__init__`. Use `processing_class` instead.
+  /home/runner/work/llm_wrappers/llm_wrappers/flan_t5_wrapper/flan_t5_wrapper.py:290: FutureWarning: `tokenizer` is deprecated and will be removed in version 5.0.0 for `Seq2SeqTrainer.__init__`. Use `processing_class` instead.
     trainer = Seq2SeqTrainer(
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
@@ -23,10 +23,10 @@ _______________ coverage: platform linux, python 3.10.18-final-0 _______________
 Name                                 Stmts   Miss  Cover   Missing
 ------------------------------------------------------------------
 flan_t5_wrapper/__init__.py              0      0   100%
-flan_t5_wrapper/flan_t5_wrapper.py     142     12    92%   25-27, 45, 69-71, 75, 101-103, 110
+flan_t5_wrapper/flan_t5_wrapper.py     157     12    92%   42-44, 65, 95-97, 101, 133-135, 142
 setup.py                                 2      2     0%   1-3
 tests/__init__.py                        0      0   100%
 tests/test_flan_t5_wrapper.py           69      2    97%   6, 131
 ------------------------------------------------------------------
-TOTAL                                  213     16    92%
-======================== 6 passed, 3 warnings in 41.63s ========================
+TOTAL                                  228     16    93%
+======================== 6 passed, 3 warnings in 40.26s ========================
