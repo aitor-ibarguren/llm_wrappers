@@ -1,4 +1,6 @@
 import os
+from enum import Enum
+from typing import Optional
 
 import torch
 from datasets import DatasetDict
@@ -8,11 +10,26 @@ from transformers import (AutoModelForSeq2SeqLM, AutoTokenizer,
                           Seq2SeqTrainingArguments)
 
 
+class FlanT5Type(Enum):
+    SMALL = 1
+    BASE = 2
+    LARGE = 3
+    XL = 4
+    XXL = 5
+
+
 class FlanT5Wrapper:
 
-    def __init__(self):
+    def __init__(self, model_type: Optional[FlanT5Type] = FlanT5Type.SMALL):
         # Init vars
-        self._model_name = "google/flan-t5-small"
+        flan_t5_type_names = {
+            FlanT5Type.SMALL: "google/flan-t5-small",
+            FlanT5Type.BASE: "google/flan-t5-base",
+            FlanT5Type.LARGE: "google/flan-t5-large",
+            FlanT5Type.XL: "google/flan-t5-XL",
+            FlanT5Type.XXL: "google/flan-t5-XXL"
+        }
+        self._model_name = flan_t5_type_names[model_type]
         self._model_init = False
         self._peft_model = False
 
@@ -35,6 +52,9 @@ class FlanT5Wrapper:
             print(self._RED + "Model already loaded!" + self._RST)
             return False
 
+        # Output
+        print(f"Loading model '{self._model_name}'...")
+
         # Load model
         self._model = AutoModelForSeq2SeqLM.from_pretrained(self._model_name)
         # Init tokenizer
@@ -46,6 +66,9 @@ class FlanT5Wrapper:
 
         self._model_init = True
 
+        # Output
+        print("Model successfuly loaded!")
+
         return True
 
     def load_stored_model(self, folder: str) -> bool:
@@ -53,6 +76,9 @@ class FlanT5Wrapper:
         if self._model_init:
             print(self._RED + "Model already loaded!" + self._RST)
             return False
+
+        # Output
+        print(f"Loading model from '{folder}'...")
 
         try:
             # Check if path exists first (optional)
@@ -76,6 +102,9 @@ class FlanT5Wrapper:
 
         self._model_init = True
 
+        # Output
+        print("Model successfuly loaded!")
+
         return True
 
     def load_stored_peft_model(self, folder: str) -> bool:
@@ -83,6 +112,9 @@ class FlanT5Wrapper:
         if self._model_init:
             print(self._RED + "Model already loaded!" + self._RST)
             return False
+
+        # Output
+        print(f"Loading PEFT model from '{folder}'...")
 
         try:
             # Check if path exists first (optional)
@@ -111,6 +143,9 @@ class FlanT5Wrapper:
 
         self._model_init = True
         self._peft_model = True
+
+        # Output
+        print("Model successfuly loaded!")
 
         return True
 

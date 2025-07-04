@@ -1,12 +1,12 @@
 
 from datasets import load_dataset
 
-from flan_t5_wrapper.flan_t5_wrapper import FlanT5Wrapper
+from flan_t5_wrapper.flan_t5_wrapper import FlanT5Type, FlanT5Wrapper
 
 
 def main():
     # Create wrapper
-    flan_t5_wrapper = FlanT5Wrapper()
+    flan_t5_wrapper = FlanT5Wrapper(FlanT5Type.SMALL)
     # Load pre-trained
     flan_t5_wrapper.load_pretrained_model()
     # Generate
