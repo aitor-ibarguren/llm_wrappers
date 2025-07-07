@@ -2,15 +2,27 @@
 platform linux -- Python 3.10.18, pytest-8.4.1, pluggy-1.6.0
 rootdir: /home/runner/work/llm_wrappers/llm_wrappers
 plugins: cov-6.2.1
-collected 6 items
+collected 12 items
 
+tests/test_bart_wrapper.py ......                                        [ 50%]
 tests/test_flan_t5_wrapper.py ......                                     [100%]
 
 =============================== warnings summary ===============================
+tests/test_bart_wrapper.py::TestBARTWrapper::test_peft_train_model
+tests/test_bart_wrapper.py::TestBARTWrapper::test_train_model
 tests/test_flan_t5_wrapper.py::TestFlanT5Wrapper::test_peft_train_model
 tests/test_flan_t5_wrapper.py::TestFlanT5Wrapper::test_train_model
   /opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/torch/utils/data/dataloader.py:665: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
     warnings.warn(warn_msg)
+
+tests/test_bart_wrapper.py::TestBARTWrapper::test_save_and_load_model
+tests/test_bart_wrapper.py::TestBARTWrapper::test_train_model
+  /opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/transformers/modeling_utils.py:3685: UserWarning: Moving the following attributes in the config to the generation config: {'early_stopping': True, 'num_beams': 4, 'no_repeat_ngram_size': 3, 'forced_bos_token_id': 0}. You are seeing this warning because you've set generation parameters in the model config, as opposed to in the generation config.
+    warnings.warn(
+
+tests/test_bart_wrapper.py::TestBARTWrapper::test_train_model
+  /home/runner/work/llm_wrappers/llm_wrappers/bart_wrapper/bart_wrapper.py:284: FutureWarning: `tokenizer` is deprecated and will be removed in version 5.0.0 for `Seq2SeqTrainer.__init__`. Use `processing_class` instead.
+    trainer = Seq2SeqTrainer(
 
 tests/test_flan_t5_wrapper.py::TestFlanT5Wrapper::test_train_model
   /home/runner/work/llm_wrappers/llm_wrappers/flan_t5_wrapper/flan_t5_wrapper.py:290: FutureWarning: `tokenizer` is deprecated and will be removed in version 5.0.0 for `Seq2SeqTrainer.__init__`. Use `processing_class` instead.
@@ -22,11 +34,14 @@ _______________ coverage: platform linux, python 3.10.18-final-0 _______________
 
 Name                                 Stmts   Miss  Cover   Missing
 ------------------------------------------------------------------
+bart_wrapper/__init__.py                 0      0   100%
+bart_wrapper/bart_wrapper.py           154     12    92%   36-38, 59, 89-91, 95, 127-129, 136
 flan_t5_wrapper/__init__.py              0      0   100%
 flan_t5_wrapper/flan_t5_wrapper.py     157     12    92%   42-44, 65, 95-97, 101, 133-135, 142
 setup.py                                 2      2     0%   1-3
 tests/__init__.py                        0      0   100%
+tests/test_bart_wrapper.py              69      2    97%   6, 131
 tests/test_flan_t5_wrapper.py           69      2    97%   6, 131
 ------------------------------------------------------------------
-TOTAL                                  228     16    93%
-======================== 6 passed, 3 warnings in 40.26s ========================
+TOTAL                                  451     30    93%
+================== 12 passed, 8 warnings in 99.93s (0:01:39) ===================
