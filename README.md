@@ -18,12 +18,14 @@
 This repository contains Python classes to load, manage, export, and fine-tune LLMs, facilitating their use in applications.
 
 List of available classes:
-* **FlanT5BaseWrapper:** Class containing LLM functionalities for FLAN-T5-Base model using Transformers library (under development).
+* **FlanT5Wrapper:** Class containing LLM functionalities for FLAN-T5 model versions using Transformers library.
+* **BARTWrapper:** Class containing LLM functionalities for BART model versions using Transformers library.
 
 Further information about the *llm_wrappers* package can be found in the next sections:
 
 - [Installation](#installation)
 - [Getting Started](#getting-started)
+- [Model Version](#model-versions)
 - [License](#license)
 
 ## Installation
@@ -76,6 +78,53 @@ if __name__ == "__main__":
 ```
 
 Additional examples can also be found in the [examples](https://github.com/aitor-ibarguren/llm_wrappers/tree/main/examples) folder.
+
+## Model Versions
+
+The next lines provide further information about the different model versions supported in the different model wrappers.
+
+### FLAN-T5
+
+The `FlanT5Wrapper` class allows managing the standard five model versions:
+* Small: `google/flan-t5-small`
+* Base: `google/flan-t5-small`
+* Large: `google/flan-t5-large`
+* XL: `google/flan-t5-xl`
+* XXL: `google/flan-t5-xxl`
+
+By default, the wrapper initializes the class with the small version of FLAT-T5 but it can be selected on the constructor using the `FlanT5Type` enumerator as shown in the next code snippet:
+
+```python
+from flan_t5_wrapper.flan_t5_wrapper import FlanT5Type, FlanT5Wrapper
+
+# Small version
+flan_t5_wrapper_small = FlanT5Wrapper(FlanT5Type.SMALL)
+# Base version
+flan_t5_wrapper_base = FlanT5Wrapper(FlanT5Type.BASE)
+# Large version
+flan_t5_wrapper_large = FlanT5Wrapper(FlanT5Type.LARGE)
+# XL version
+flan_t5_wrapper_xl = FlanT5Wrapper(FlanT5Type.XL)
+# XXL version
+flan_t5_wrapper_xxl = FlanT5Wrapper(FlanT5Type.XXL)
+```
+
+### BART
+
+The `BARTWrapper` class allows managing the standard five model versions:
+* Base: `facebook/bart-base`
+* Large: `facebook/bart-large`
+
+By default, the wrapper initializes the class with the base version of BART but it can be selected on the constructor using the `BARTType` enumerator as shown in the next code snippet:
+
+```python
+from bart_wrapper.bart_wrapper import BARTType, BARTWrapper
+
+# Base version
+bart_wrapper_base = BARTWrapper(BARTType.BASE)
+# Large version
+bart_wrapper_large = BARTWrapper(BARTType.LARGE)
+```
 
 ## License
 
