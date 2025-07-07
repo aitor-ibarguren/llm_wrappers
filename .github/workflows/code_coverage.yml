@@ -42,6 +42,7 @@ jobs:
     - name: Fetch Codecov badge and coverage summary
       run: |
         # Download coverage badge SVG from Codecov
+        sleep 30
         curl -o coverage-badge.svg https://codecov.io/gh/aitor-ibarguren/llm_wrappers/branch/main/graph/badge.svg
         
         # Generate a coverage summary file locally
