@@ -20,6 +20,7 @@ This repository contains Python classes to load, manage, export, and fine-tune L
 List of available classes:
 * **FlanT5Wrapper:** Class containing LLM functionalities for FLAN-T5 model versions using Transformers library.
 * **BARTWrapper:** Class containing LLM functionalities for BART model versions using Transformers library.
+* **GPT2Wrapper:** Class containing LLM functionalities for GPT-2 decoder-only model versions using Transformers library.
 
 Further information about the *llm_wrappers* package can be found in the next sections:
 
@@ -124,6 +125,29 @@ from bart_wrapper.bart_wrapper import BARTType, BARTWrapper
 bart_wrapper_base = BARTWrapper(BARTType.BASE)
 # Large version
 bart_wrapper_large = BARTWrapper(BARTType.LARGE)
+```
+
+### GPT-2
+
+The `GPT2Wrapper` class allows managing the standard five model versions:
+* Base: `gpt2`
+* Medium: `gpt2-medium`
+* Large: `gpt2-large`
+* XL: `gpt2-xl`
+
+By default, the wrapper initializes the class with the base version of GPT-2 but it can be selected on the constructor using the `GPT2Type` enumerator as shown in the next code snippet:
+
+```python
+from gpt2_wrapper.gpt2_wrapper import GPT2Type, GPT2Wrapper
+
+# Base version
+gpt2_wrapper_base = GPT2Wrapper(GPT2Type.BASE)
+# Medium version
+gpt2_wrapper_medium = GPT2Wrapper(GPT2Type.MEDIUM)
+# Large version
+gpt2_wrapper_large = GPT2Wrapper(GPT2Type.LARGE)
+# XL version
+gpt2_wrapper_xl = GPT2Wrapper(GPT2Type.XL)
 ```
 
 ## License
