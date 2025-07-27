@@ -1,6 +1,5 @@
 import os
 from enum import Enum
-from typing import Optional
 
 import torch
 from datasets import DatasetDict
@@ -18,7 +17,7 @@ class GPT2Type(Enum):
 
 class GPT2Wrapper:
 
-    def __init__(self, model_type: Optional[GPT2Type] = GPT2Type.BASE):
+    def __init__(self, model_type: GPT2Type = GPT2Type.BASE):
         # Init vars
         gpt2_type_names = {
             GPT2Type.BASE: "gpt2",
@@ -169,7 +168,13 @@ class GPT2Wrapper:
 
         return True
 
-    def generate(self, input_text: str) -> tuple[bool, str]:
+    def generate(
+        self,
+        input_text: str,
+        max_new_tokens: int = 50,
+        temperature: float = 0.7,
+        top_p: float = 0.9
+    ) -> tuple[bool, str]:
         # Check if already loaded
         if not self._model_init:
             print(self._RED + "Model not loaded yet!" + self._RST)
@@ -182,7 +187,9 @@ class GPT2Wrapper:
         # Get generated output
         output_ids = self._model.generate(
             **input_tokenized,
-            max_length=50,
+            max_length=max_new_tokens,
+            temperature=temperature,
+            top_p=top_p,
             do_sample=True,
             pad_token_id=self._tokenizer.pad_token_id
         )
@@ -193,7 +200,13 @@ class GPT2Wrapper:
         # Return
         return True, output
 
-    def generate_list(self, input_texts: list[str]) -> tuple[bool, list[str]]:
+    def generate_list(
+        self,
+        input_texts: list[str],
+        max_new_tokens: int = 50,
+        temperature: float = 0.7,
+        top_p: float = 0.9
+    ) -> tuple[bool, list[str]]:
         # Check if already loaded
         if not self._model_init:
             print(self._RED + "Model not loaded yet!" + self._RST)
@@ -208,7 +221,9 @@ class GPT2Wrapper:
         # Get generated output
         output_ids = self._model.generate(
             **inputs_tokenized,
-            max_new_tokens=50,
+            max_new_tokens=max_new_tokens,
+            temperature=temperature,
+            top_p=top_p,
             do_sample=True,
             pad_token_id=self._tokenizer.pad_token_id
         )
@@ -240,10 +255,16 @@ class GPT2Wrapper:
 
         return model_inputs
 
-    def train_model(self, dataset: DatasetDict, training_column_id: str,
-                    label_column_id: str, trained_model_folder: str,
-                    num_train_epochs=1, learning_rate=1e-4,
-                    logging=False) -> bool:
+    def train_model(
+        self,
+        dataset: DatasetDict,
+        training_column_id: str,
+        label_column_id: str,
+        trained_model_folder: str,
+        num_train_epochs=1,
+        learning_rate=1e-4,
+        logging=False
+    ) -> bool:
         # Empty CUDA cache
         torch.cuda.empty_cache()
 
@@ -312,10 +333,16 @@ class GPT2Wrapper:
 
         return True
 
-    def peft_lora_train_model(self, dataset: DatasetDict,
-                              training_column_id: str, label_column_id: str,
-                              trained_model_folder: str, num_train_epochs=1,
-                              learning_rate=1e-4, logging=False) -> bool:
+    def peft_lora_train_model(
+        self,
+        dataset: DatasetDict,
+        training_column_id: str,
+        label_column_id: str,
+        trained_model_folder: str,
+        num_train_epochs=1,
+        learning_rate=1e-4,
+        logging=False
+    ) -> bool:
         # Empty CUDA cache
         torch.cuda.empty_cache()
 
