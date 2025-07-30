@@ -261,9 +261,9 @@ class GPT2Wrapper:
         training_column_id: str,
         label_column_id: str,
         trained_model_folder: str,
-        num_train_epochs=1,
-        learning_rate=1e-4,
-        logging=False
+        num_train_epochs: int = 1,
+        learning_rate: float = 1e-4,
+        logging: bool = False
     ) -> bool:
         # Empty CUDA cache
         torch.cuda.empty_cache()
@@ -339,9 +339,9 @@ class GPT2Wrapper:
         training_column_id: str,
         label_column_id: str,
         trained_model_folder: str,
-        num_train_epochs=1,
-        learning_rate=1e-4,
-        logging=False
+        num_train_epochs: int = 1,
+        learning_rate: float = 1e-4,
+        logging: bool = False
     ) -> bool:
         # Empty CUDA cache
         torch.cuda.empty_cache()
