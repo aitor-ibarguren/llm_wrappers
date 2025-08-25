@@ -47,14 +47,18 @@ class TestFAISSWrapper(unittest.TestCase):
         # Init new index
         self.assertTrue(faiss_wrapper.init_new_index())
         # Add CSV to index
+        current_dir = os.path.dirname(__file__)
+        file_path = os.path.join(current_dir, "data", "fake.csv")
         self.assertFalse(faiss_wrapper.add_from_csv(
-            './data/fake.csv', 'shop data'))
+            file_path, 'shop data'))
         # Add CSV to index again
+        current_dir = os.path.dirname(__file__)
+        file_path = os.path.join(current_dir, "data", "shop_data.csv")
         self.assertFalse(faiss_wrapper.add_from_csv(
-            './data/shop_data.csv', 'no-field'))
+            file_path, 'no-field'))
         # Add CSV to index one last time
         self.assertTrue(faiss_wrapper.add_from_csv(
-            './data/shop_data.csv', 'shop data'))
+            file_path, 'shop data'))
         # Check size
         res, size = faiss_wrapper.get_index_size()
         self.assertTrue(res and size == 15)
@@ -65,8 +69,10 @@ class TestFAISSWrapper(unittest.TestCase):
         # Init new index
         self.assertTrue(faiss_wrapper.init_new_index())
         # Add CSV to index
+        current_dir = os.path.dirname(__file__)
+        file_path = os.path.join(current_dir, "data", "shop_data.csv")
         self.assertTrue(faiss_wrapper.add_from_csv(
-            './data/shop_data.csv', 'shop data'))
+            file_path, 'shop data'))
         # Check size
         res, output_texts, distances = faiss_wrapper.search([
             'Where is located the shop?',
@@ -88,18 +94,19 @@ class TestFAISSWrapper(unittest.TestCase):
         # Add to index
         self.assertTrue(faiss_wrapper.add_to_index(text_list))
         # Save index
-        self.assertTrue(faiss_wrapper.save_index('./', 'test_index'))
+        current_dir = os.path.dirname(__file__)
+        self.assertTrue(faiss_wrapper.save_index(current_dir, 'test_index'))
         # Save index in protected path
         self.assertFalse(faiss_wrapper.save_index('/root', 'test_index'))
         # Create new index
         new_faiss_wrapper = FAISSWrapper()
         # Try loading non-existent index
         self.assertFalse(
-            new_faiss_wrapper.load_stored_index('./', 'fake_index')
+            new_faiss_wrapper.load_stored_index(current_dir, 'fake_index')
         )
         # Try loading stored index
         self.assertTrue(
-            new_faiss_wrapper.load_stored_index('./', 'test_index')
+            new_faiss_wrapper.load_stored_index(current_dir, 'test_index')
         )
 
     def test_save_load_index_2(self):
@@ -108,15 +115,17 @@ class TestFAISSWrapper(unittest.TestCase):
         # Init new index
         self.assertTrue(faiss_wrapper.init_new_index())
         # Add CSV to index
+        current_dir = os.path.dirname(__file__)
+        file_path = os.path.join(current_dir, "data", "shop_data.csv")
         self.assertTrue(faiss_wrapper.add_from_csv(
-            './data/shop_data.csv', 'shop data'))
+            file_path, 'shop data'))
         # Save index
-        self.assertTrue(faiss_wrapper.save_index('./', 'test_index_2'))
+        self.assertTrue(faiss_wrapper.save_index(current_dir, 'test_index_2'))
         # Create new index
         new_faiss_wrapper = FAISSWrapper()
         # Try loading stored index
         self.assertTrue(
-            new_faiss_wrapper.load_stored_index('./', 'test_index_2')
+            new_faiss_wrapper.load_stored_index(current_dir, 'test_index_2')
         )
 
 
