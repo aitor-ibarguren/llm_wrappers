@@ -1,5 +1,4 @@
 import faiss
-import os
 import pandas
 import torch
 from sentence_transformers import SentenceTransformer
@@ -63,6 +62,30 @@ class FAISSWrapper:
 
         return True
 
+    def _handle_read_index_error(self, error: Exception, path: str) -> bool:
+        if isinstance(error, FileNotFoundError):
+            msg = f"File not found at '{path}'"
+        elif isinstance(error, PermissionError):
+            msg = f"Permission denied for '{path}'"
+        else:
+            msg = f"Error loading FAISS index: {error}"
+
+        print(self._RED + msg + self._RST)
+
+        return False
+
+    def _handle_read_csv_error(self, error: Exception, path: str) -> bool:
+        if isinstance(error, FileNotFoundError):
+            msg = f"File '{path}' not found"
+        elif isinstance(error, pandas.errors.ParserError):
+            msg = f"Failed to parse '{path}'"
+        else:
+            msg = f"Unexpected error: {error}"
+
+        print(self._RED + msg + self._RST)
+
+        return False
+
     def load_stored_index(self, path: str, index_name: str) -> bool:
         # Check if already initialized
         if self._index_init:
@@ -82,17 +105,8 @@ class FAISSWrapper:
 
         try:
             self._index = faiss.read_index(complete_index_path)
-        except FileNotFoundError:
-            print(self._RED + f"File not found at '{complete_index_path}'" +
-                  self._RST)
-            return False
-        except PermissionError:
-            print(self._RED + f"Permission denied for '{complete_index_path}'"
-                  + self._RST)
-            return False
         except Exception as e:
-            print(self._RED + f'Error loading FAISS index: {e}' + self._RST)
-            return False
+            return self._handle_read_index_error(e, complete_index_path)
 
         index_dimension = self._index.d
         print(f'Index with {index_dimension} dimensions...')
@@ -116,18 +130,8 @@ class FAISSWrapper:
         # Load raw text CSV
         try:
             csv_data = pandas.read_csv(complete_raw_text_path, sep=';')
-        except FileNotFoundError:
-            print(self._RED + f"File '{complete_raw_text_path}' not found" +
-                  self._RST)
-            return False
-        except pandas.errors.ParserError:
-            print(
-                self._RED + f"Failed to parse '{complete_raw_text_path}'" +
-                self._RST)
-            return False
         except Exception as e:
-            print(f"Unexpected error: {e}")
-            return False
+            return self._handle_csv_load_error(e, complete_raw_text_path)
 
         # Get values of provided field
         try:
