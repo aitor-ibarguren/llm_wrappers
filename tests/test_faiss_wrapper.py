@@ -2,10 +2,10 @@ import os
 import sys
 import unittest
 
-if __name__ == "__main__" or __package__ is None:
+if __name__ == '__main__' or __package__ is None:
     sys.path.insert(
         0,
-        os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
     )
 
 
@@ -48,12 +48,12 @@ class TestFAISSWrapper(unittest.TestCase):
         self.assertTrue(faiss_wrapper.init_new_index())
         # Add CSV to index
         current_dir = os.path.dirname(__file__)
-        file_path = os.path.join(current_dir, "data", "fake.csv")
+        file_path = os.path.join(current_dir, 'data', 'fake.csv')
         self.assertFalse(faiss_wrapper.add_from_csv(
             file_path, 'shop data'))
         # Add CSV to index again
         current_dir = os.path.dirname(__file__)
-        file_path = os.path.join(current_dir, "data", "shop_data.csv")
+        file_path = os.path.join(current_dir, 'data', 'shop_data.csv')
         self.assertFalse(faiss_wrapper.add_from_csv(
             file_path, 'no-field'))
         # Add CSV to index one last time
@@ -70,7 +70,7 @@ class TestFAISSWrapper(unittest.TestCase):
         self.assertTrue(faiss_wrapper.init_new_index())
         # Add CSV to index
         current_dir = os.path.dirname(__file__)
-        file_path = os.path.join(current_dir, "data", "shop_data.csv")
+        file_path = os.path.join(current_dir, 'data', 'shop_data.csv')
         self.assertTrue(faiss_wrapper.add_from_csv(
             file_path, 'shop data'))
         # Check size
@@ -116,7 +116,7 @@ class TestFAISSWrapper(unittest.TestCase):
         self.assertTrue(faiss_wrapper.init_new_index())
         # Add CSV to index
         current_dir = os.path.dirname(__file__)
-        file_path = os.path.join(current_dir, "data", "shop_data.csv")
+        file_path = os.path.join(current_dir, 'data', 'shop_data.csv')
         self.assertTrue(faiss_wrapper.add_from_csv(
             file_path, 'shop data'))
         # Save index
@@ -129,5 +129,5 @@ class TestFAISSWrapper(unittest.TestCase):
         )
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main()

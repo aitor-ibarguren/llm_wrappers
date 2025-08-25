@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='llm_wrappers',
-    version='0.1',
+    version='0.2',
     packages=find_packages(),
     description='LLM wrapper classes in Python for a simple development of LLM-based applications',
     author='Aitor Ibarguren',
