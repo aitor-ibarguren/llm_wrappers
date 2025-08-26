@@ -15,12 +15,15 @@
   </a>
 </p>
 
-This repository contains Python classes to load, manage, export, and fine-tune LLMs, facilitating their use in applications.
+This repository contains Python classes to load, manage, export, and fine-tune LLMs, facilitating their use in applications. Additionally, the repository includes complementary classes to simplify the developments of RAG and agentic systems. 
 
 List of available classes:
-* **FlanT5Wrapper:** Class containing LLM functionalities for FLAN-T5 model versions using Transformers library.
-* **BARTWrapper:** Class containing LLM functionalities for BART model versions using Transformers library.
-* **GPT2Wrapper:** Class containing LLM functionalities for GPT-2 decoder-only model versions using Transformers library.
+* **Generation**
+  * **FlanT5Wrapper:** Class containing LLM functionalities for FLAN-T5 model versions using Transformers library.
+  * **BARTWrapper:** Class containing LLM functionalities for BART model versions using Transformers library.
+  * **GPT2Wrapper:** Class containing LLM functionalities for GPT-2 decoder-only model versions using Transformers library.
+* **Retrieval**
+  * **FAISSWrapper:** Class containing embedding, indexing, and retrieval functionalities using FAISS library.
 
 Further information about the *llm_wrappers* package can be found in the next sections:
 
@@ -29,6 +32,7 @@ Further information about the *llm_wrappers* package can be found in the next se
 - [Model Version](#model-versions)
 - [Generation Function](#generation-function)
 - [Training Functions](#training-functions)
+- [RAG Systems](#rag-systems)
 - [License](#license)
 
 ## Installation
@@ -246,6 +250,75 @@ def main():
 
 
 if __name__ == "__main__":
+    main()
+```
+
+## RAG Systems
+
+To construct complex applications, such as Retrieval-augmented generation (RAG) systems, the repository contains wrapper classes that facilitate data embedding, indexing, and retrieval as a first step to generate augmented prompts to be sent to the LLMs.
+
+As an example, the FAISSWrapper class includes a vector database for semantic searching using an approximate nearest neighbor (ANN) algorithm. The class allows creating new indexes, as well as saving and loading them. The class also includes functions for batch loading text inputs (e.g. from CSV files), facilitating the indexing of data exported from third applications.
+
+The next code snippet provides an example of a simple RAG system that loads information related to a shop from a CSV file, stores it in an index, and afterwards uses it to retrieve information related to the provided prompts, creating augmented prompts that will be sent to the LLM:
+
+```python
+import os
+
+from faiss_wrapper.faiss_wrapper import FAISSWrapper
+from flan_t5_wrapper.flan_t5_wrapper import FlanT5Type, FlanT5Wrapper
+
+
+def main():
+    # Create Flan T5 wrapper
+    generator = FlanT5Wrapper(FlanT5Type.SMALL)
+    # Load pre-trained
+    generator.load_pretrained_model()
+
+    # Create retriever wrapper
+    retriever = FAISSWrapper()
+    # Init new index
+    retriever.init_new_index()
+    # Add CSV to index
+    current_dir = os.path.dirname(__file__)
+    file_path = os.path.join(current_dir, 'data', 'shop_data.csv')
+    retriever.add_from_csv(file_path, 'shop data')
+
+    # Prompt
+    prompts = ['Can I buy a Gibson guitar at your shop?',
+               'Which is the return policy?']
+
+    # Get relevant data
+    res, relevant_data, _ = retriever.search(prompts, 5)
+
+    if not res:
+        print('Could not retrieve relevant information for the prompts')
+        return
+
+    # Generate augmented prompt
+    augmented_prompts = []
+
+    for index, relevant_text_list in enumerate(relevant_data):
+        # Set all relevan text in a string
+        context = ''
+        for text in relevant_text_list:
+            context += text + '\n'
+
+        augmented_prompts.append(
+            f"You are a helpful assistant answering customer questions.\n\n"
+            f"Context:\n{context}\n\n"
+            f"Question:\n{prompts[index]}\n\n"
+            f"Answer the question using only the information in the context"
+            f"above. Be concise and accurate."
+        )
+
+    # Generate
+    res, outputs = generator.generate_list(augmented_prompts)
+    for input_str, output_str in zip(prompts, outputs):
+            print('INPUT: ' + input_str)
+            print('OUTPUT: ' + output_str)
+
+
+if __name__ == '__main__':
     main()
 ```
 

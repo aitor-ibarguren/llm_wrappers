@@ -8,6 +8,7 @@ charset-normalizer
 colorama
 datasets
 dill
+faiss-gpu
 filelock
 frozenlist
 fsspec
@@ -19,7 +20,7 @@ mpmath
 multidict
 multiprocess
 networkx
-numpy
+numpy<2
 packaging
 pandas
 peft
@@ -32,6 +33,7 @@ PyYAML
 regex
 requests
 safetensors
+sentence_transformers
 setuptools
 six
 sympy
