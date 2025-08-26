@@ -2,25 +2,34 @@
 platform linux -- Python 3.10.18, pytest-8.4.1, pluggy-1.6.0
 rootdir: /home/runner/work/llm_wrappers/llm_wrappers
 plugins: cov-6.2.1
-collected 18 items
+collected 24 items
 
-tests/test_bart_wrapper.py ......                                        [ 33%]
-tests/test_flan_t5_wrapper.py ......                                     [ 66%]
+tests/test_bart_wrapper.py ......                                        [ 25%]
+tests/test_faiss_wrapper.py ......                                       [ 50%]
+tests/test_flan_t5_wrapper.py ......                                     [ 75%]
 tests/test_gpt2_wrapper.py ......                                        [100%]
 
 =============================== warnings summary ===============================
+../../../../../opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/faiss/loader.py:28
+  /opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/faiss/loader.py:28: DeprecationWarning: distutils Version classes are deprecated. Use packaging.version instead.
+    if LooseVersion(numpy.__version__) >= "1.19":
+
+../../../../../opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/setuptools/_distutils/version.py:346
+  /opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/setuptools/_distutils/version.py:346: DeprecationWarning: distutils Version classes are deprecated. Use packaging.version instead.
+    other = LooseVersion(other)
+
 tests/test_bart_wrapper.py::TestBARTWrapper::test_peft_train_model
 tests/test_bart_wrapper.py::TestBARTWrapper::test_train_model
 tests/test_flan_t5_wrapper.py::TestFlanT5Wrapper::test_peft_train_model
 tests/test_flan_t5_wrapper.py::TestFlanT5Wrapper::test_train_model
 tests/test_gpt2_wrapper.py::TestFlanT5Wrapper::test_peft_train_model
 tests/test_gpt2_wrapper.py::TestFlanT5Wrapper::test_train_model
-  /opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/torch/utils/data/dataloader.py:665: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
+  /opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/torch/utils/data/dataloader.py:666: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
     warnings.warn(warn_msg)
 
 tests/test_bart_wrapper.py::TestBARTWrapper::test_save_and_load_model
 tests/test_bart_wrapper.py::TestBARTWrapper::test_train_model
-  /opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/transformers/modeling_utils.py:3852: UserWarning: Moving the following attributes in the config to the generation config: {'early_stopping': True, 'num_beams': 4, 'no_repeat_ngram_size': 3, 'forced_bos_token_id': 0}. You are seeing this warning because you've set generation parameters in the model config, as opposed to in the generation config.
+  /opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/transformers/modeling_utils.py:3922: UserWarning: Moving the following attributes in the config to the generation config: {'early_stopping': True, 'num_beams': 4, 'no_repeat_ngram_size': 3, 'forced_bos_token_id': 0}. You are seeing this warning because you've set generation parameters in the model config, as opposed to in the generation config.
     warnings.warn(
 
 tests/test_bart_wrapper.py::TestBARTWrapper::test_train_model
@@ -32,7 +41,7 @@ tests/test_flan_t5_wrapper.py::TestFlanT5Wrapper::test_train_model
     trainer = Seq2SeqTrainer(
 
 tests/test_gpt2_wrapper.py::TestFlanT5Wrapper::test_peft_train_model
-  /opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/peft/tuners/lora/layer.py:1803: UserWarning: fan_in_fan_out is set to False but the target module is `Conv1D`. Setting fan_in_fan_out to True.
+  /opt/hostedtoolcache/Python/3.10.18/x64/lib/python3.10/site-packages/peft/tuners/lora/layer.py:2174: UserWarning: fan_in_fan_out is set to False but the target module is `Conv1D`. Setting fan_in_fan_out to True.
     warnings.warn(
 
 tests/test_gpt2_wrapper.py::TestFlanT5Wrapper::test_train_model
@@ -47,6 +56,8 @@ Name                                 Stmts   Miss  Cover   Missing
 ------------------------------------------------------------------
 bart_wrapper/__init__.py                 0      0   100%
 bart_wrapper/bart_wrapper.py           153     12    92%   35-37, 58, 88-90, 94, 126-128, 135
+faiss_wrapper/__init__.py                0      0   100%
+faiss_wrapper/faiss_wrapper.py         165     44    73%   27-31, 34-38, 67, 69, 78-87, 92-93, 122-126, 133-134, 139-141, 145-148, 181-182, 192-198, 239-240, 257-258, 272-274, 276-278
 flan_t5_wrapper/__init__.py              0      0   100%
 flan_t5_wrapper/flan_t5_wrapper.py     156     12    92%   41-43, 64, 94-96, 100, 132-134, 141
 gpt2_wrapper/__init__.py                 0      0   100%
@@ -54,8 +65,9 @@ gpt2_wrapper/gpt2_wrapper.py           157     12    92%   38-40, 63, 93-95, 99,
 setup.py                                 2      2     0%   1-3
 tests/__init__.py                        0      0   100%
 tests/test_bart_wrapper.py              69      2    97%   6, 131
+tests/test_faiss_wrapper.py             69      2    97%   6, 133
 tests/test_flan_t5_wrapper.py           69      2    97%   6, 131
 tests/test_gpt2_wrapper.py              69      2    97%   6, 134
 ------------------------------------------------------------------
-TOTAL                                  675     44    93%
-================= 18 passed, 12 warnings in 180.44s (0:03:00) ==================
+TOTAL                                  909     90    90%
+================= 24 passed, 14 warnings in 187.86s (0:03:07) ==================
