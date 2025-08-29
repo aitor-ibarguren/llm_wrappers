@@ -37,13 +37,27 @@ class TestFAISSWrapper(unittest.TestCase):
         self.assertTrue(faiss_wrapper.init_new_index())
         # Add to index again
         self.assertTrue(faiss_wrapper.add_to_index(text_list))
+        # Add to index with chunking
+        text_list.clear()
+        long_string = (
+            "This is a long string that is split across multiple lines"
+            " to verify the chunking capabilities of the FAISSWrapper class."
+            "The chunker should divide the string into different chunks."
+        )
+        text_list.append(long_string)
+        self.assertTrue(faiss_wrapper.add_to_index(text_list, True, 25, 5))
         # Check size
         res, size = faiss_wrapper.get_index_size()
-        self.assertTrue(res and size == 2)
+        self.assertTrue(res and size == 11)
 
     def test_add_from_csv(self):
         # Create wrapper
         faiss_wrapper = FAISSWrapper()
+        # Add CSV to non-initialized index
+        current_dir = os.path.dirname(__file__)
+        file_path = os.path.join(current_dir, 'data', 'shop_data.csv')
+        self.assertFalse(faiss_wrapper.add_from_csv(
+            file_path, 'shop data'))
         # Init new index
         self.assertTrue(faiss_wrapper.init_new_index())
         # Add CSV to index
@@ -63,7 +77,7 @@ class TestFAISSWrapper(unittest.TestCase):
         res, size = faiss_wrapper.get_index_size()
         self.assertTrue(res and size == 15)
 
-    def test_search(self):
+    def test_add_from_csv_2(self):
         # Create wrapper
         faiss_wrapper = FAISSWrapper()
         # Init new index
@@ -72,8 +86,50 @@ class TestFAISSWrapper(unittest.TestCase):
         current_dir = os.path.dirname(__file__)
         file_path = os.path.join(current_dir, 'data', 'shop_data.csv')
         self.assertTrue(faiss_wrapper.add_from_csv(
-            file_path, 'shop data'))
+            file_path, 'shop data', chunking=True, chunk_size=50,
+            chunk_overlap=5))
         # Check size
+        res, size = faiss_wrapper.get_index_size()
+        self.assertTrue(res and size == 28)
+
+    def test_add_pdfs_from_folder(self):
+        # Create wrapper
+        faiss_wrapper = FAISSWrapper()
+        # Add PDFs to non-initialized index
+        current_dir = os.path.dirname(__file__)
+        folder_path = os.path.join(current_dir, 'docs')
+        self.assertFalse(faiss_wrapper.add_pdfs_from_folder(
+            folder_path))
+        # Init new index
+        self.assertTrue(faiss_wrapper.init_new_index())
+        # Add PDFs from non-existent folder
+        current_dir = os.path.dirname(__file__)
+        folder_path = os.path.join(current_dir, 'fake')
+        self.assertFalse(faiss_wrapper.add_pdfs_from_folder(
+            folder_path))
+        # Add PDFs to index
+        current_dir = os.path.dirname(__file__)
+        folder_path = os.path.join(current_dir, 'docs')
+        self.assertTrue(faiss_wrapper.add_pdfs_from_folder(
+            folder_path))
+
+    def test_search(self):
+        # Create wrapper
+        faiss_wrapper = FAISSWrapper()
+        # Search in non-initialized index
+        res, output_texts, distances = faiss_wrapper.search([
+            'Where is located the shop?',
+            'What kind of musical instruments can I find in the shop?'
+        ], 5)
+        self.assertFalse(res)
+        # Init new index
+        self.assertTrue(faiss_wrapper.init_new_index())
+        # Add CSV to index
+        current_dir = os.path.dirname(__file__)
+        file_path = os.path.join(current_dir, 'data', 'shop_data.csv')
+        self.assertTrue(faiss_wrapper.add_from_csv(
+            file_path, 'shop data'))
+        # Search and check size
         res, output_texts, distances = faiss_wrapper.search([
             'Where is located the shop?',
             'What kind of musical instruments can I find in the shop?'
@@ -85,6 +141,9 @@ class TestFAISSWrapper(unittest.TestCase):
     def test_save_load_index(self):
         # Create wrapper
         faiss_wrapper = FAISSWrapper()
+        # Save non-initialized index
+        current_dir = os.path.dirname(__file__)
+        self.assertFalse(faiss_wrapper.save_index(current_dir, 'test_index'))
         # Create text list
         text_list: list[str] = []
         text_list.append('Test message')
@@ -106,6 +165,10 @@ class TestFAISSWrapper(unittest.TestCase):
         )
         # Try loading stored index
         self.assertTrue(
+            new_faiss_wrapper.load_stored_index(current_dir, 'test_index')
+        )
+        # Try loading stored index again
+        self.assertFalse(
             new_faiss_wrapper.load_stored_index(current_dir, 'test_index')
         )
 
