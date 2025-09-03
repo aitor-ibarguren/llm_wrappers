@@ -113,6 +113,18 @@ class TestFAISSWrapper(unittest.TestCase):
         self.assertTrue(faiss_wrapper.add_pdfs_from_folder(
             folder_path))
 
+    def test_add_web_search_DDG(self):
+        # Create wrapper
+        faiss_wrapper = FAISSWrapper()
+        # Add web search to non-initialized index
+        self.assertTrue(faiss_wrapper.add_web_search_DDG(
+            'History of Large Language Models (LLM)', 10))
+        # Init new index
+        self.assertTrue(faiss_wrapper.init_new_index())
+        # Add web search to index
+        self.assertTrue(faiss_wrapper.add_web_search_DDG(
+            'History of Large Language Models (LLM)', 10))
+
     def test_search(self):
         # Create wrapper
         faiss_wrapper = FAISSWrapper()

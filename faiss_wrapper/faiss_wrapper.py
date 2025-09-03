@@ -3,9 +3,15 @@ import os
 import faiss
 import fitz  # For PyMuPDF
 import pandas
+import random
+import re
+import requests
+from bs4 import BeautifulSoup
+from ddgs import DDGS
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
+from urllib.parse import urlparse
 
 
 class FAISSWrapper:
@@ -17,7 +23,24 @@ class FAISSWrapper:
 
         # Output vars
         self._RED = '\033[91m'
+        self._YELLOW = '\033[33m'
         self._RST = '\033[0m'
+
+        self._user_agents = [
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+            "Mozilla/5.0 (X11; Linux x86_64)",
+        ]
+
+        self._headers = {
+            "User-Agent": random.choice(self._user_agents),
+            "Accept-Language": "en-US,en;q=0.9",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Referer": "https://www.google.com",
+            "DNT": "1",
+            "Connection": "keep-alive"
+        }
 
     def init_new_index(self) -> bool:
         # Check if already initialized
@@ -280,6 +303,131 @@ class FAISSWrapper:
                                    chunk_overlap)
 
         print(f"PDFs divided into {len(chunks)} chunks")
+
+        # Texts into embedding
+        print('Embedding chunks...')
+        embeddings = self._model.encode(chunks, convert_to_numpy=True)
+        # Add to index
+        print('Adding chunks to index...')
+        self._index.add(embeddings)
+
+        # Store original texts
+        self._texts.extend(chunks)
+
+        # Output
+        print(
+            f'Added {len(chunks)} embeddings - '
+            f'A total of {self._index.ntotal} embeddings on index'
+        )
+
+        return True
+
+    def _check_wikipedia_page(self, url: str, bs: BeautifulSoup) -> bool:
+        # Check URL domain
+        parsed_url = urlparse(url)
+        if "wikipedia.org" not in parsed_url.netloc:
+            return False
+
+        # Check Wikipedia markers
+        title_tag = bs.find("title")
+        if not title_tag or "Wikipedia" not in title_tag.text:
+            return False
+
+        return True
+
+    def _check_copyright(self, url: str, bs: BeautifulSoup) -> bool:
+        # Combine all footer text content
+        footers = bs.find_all(['footer', 'div'], class_=re.compile("footer",
+                                                                   re.I))
+        footer_text = " ".join([f.get_text(separator=" ",
+                                           strip=True) for f in footers])
+
+        # Also scan the whole page text in case it's not in a footer
+        page_text = bs.get_text(separator=" ", strip=True)
+
+        # Define regex pattern for copyright
+        pattern = re.compile(r"(©|\bCopyright\b).*?\d{4}", re.IGNORECASE)
+
+        # Check footer first, then full page
+        if pattern.search(footer_text):
+            return True
+        elif pattern.search(page_text):
+            return True
+        else:
+            return False
+
+    def _handle_ddgs_error(self, error: Exception) -> bool:
+        if isinstance(error, requests.exceptions.RequestException):
+            msg = f"Network error '{error}'"
+        else:
+            msg = f"Unexpected error: {error}"
+
+        print(self._RED + msg + self._RST)
+
+        return False
+
+    def add_web_search_DDG(self, web_search_query: str, max_results: int = 5,
+                           chunk_size: int = 512,
+                           chunk_overlap: int = 50) -> bool:
+        # Check if already initialized
+        if not self._index_init:
+            print(self._RED + 'Index not initialized/loaded yet!' + self._RST)
+            return False
+
+        # Get web search results
+        try:
+            web_search_content = []
+            with DDGS() as ddgs:
+                web_search_results = ddgs.text(web_search_query,
+                                               max_results=max_results)
+                for result in tqdm(web_search_results,
+                                   desc="Web page parsing"):
+                    # Get URL
+                    url = result['href']
+                    # Get URL content
+                    self._headers['User-Agent'] = random.choice(
+                        self._user_agents)
+                    url_content = requests.get(url, headers=self._headers)
+                    # Get BeautifulSoup object
+                    bs = BeautifulSoup(url_content.text, 'html.parser')
+                    # Check if Wikipedia page or has copyright
+                    if (
+                        not self._check_wikipedia_page(url, bs) and
+                        self._check_copyright(url, bs)
+                    ):
+                        print(
+                            self._YELLOW +
+                            'Skipping URL due to legal/ethical issues:' + url
+                            + self._RST)
+                        continue
+                    # Find main/article & remove HTML marks
+                    main_or_article = bs.find('main') or bs.find('article')
+                    if main_or_article:
+                        clean_url_content = main_or_article.get_text(
+                            strip=True)
+                    else:
+                        print(
+                            self._YELLOW +
+                            "'main' or 'article' tags not found in "
+                            + url + self._RST)
+                        continue
+                    # Additional text cleaning
+                    clean_url_content = re.sub(r'\n\s*\n+', '\n\n',
+                                               clean_url_content)
+                    # Store
+                    web_search_content.append(clean_url_content)
+        except Exception as e:
+            self._handle_ddgs_error(e)
+
+        # Check if any content retrieved
+        if len(web_search_content) == 0:
+            return False
+
+        # Chunk file content
+        chunks = self._chunk_texts(web_search_content, chunk_size,
+                                   chunk_overlap)
+
+        print(f"Web search information divided into {len(chunks)} chunks")
 
         # Texts into embedding
         print('Embedding chunks...')

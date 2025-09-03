@@ -3,11 +3,13 @@ aiohappyeyeballs
 aiohttp
 aiosignal
 attrs
+bs4
 certifi
 charset-normalizer
 colorama
 datasets
 dill
+ddgs
 faiss-gpu
 filelock
 frozenlist
