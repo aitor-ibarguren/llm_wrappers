@@ -3,11 +3,13 @@ aiohappyeyeballs
 aiohttp
 aiosignal
 attrs
+bs4
 certifi
 charset-normalizer
 colorama
 datasets
 dill
+ddgs
 faiss-gpu
 filelock
 frozenlist
@@ -15,6 +17,7 @@ fsspec
 huggingface-hub
 idna==3.10
 Jinja2
+langchain
 MarkupSafe
 mpmath
 multidict
@@ -27,6 +30,7 @@ peft
 propcache
 psutil
 pyarrow
+pymupdf
 python-dateutil
 pytz
 PyYAML

@@ -18,20 +18,24 @@
 This repository contains Python classes to load, manage, export, and fine-tune LLMs, facilitating their use in applications. Additionally, the repository includes complementary classes to simplify the developments of RAG and agentic systems. 
 
 List of available classes:
-* **Generation**
+* **Generators**
   * **FlanT5Wrapper:** Class containing LLM functionalities for FLAN-T5 model versions using Transformers library.
   * **BARTWrapper:** Class containing LLM functionalities for BART model versions using Transformers library.
   * **GPT2Wrapper:** Class containing LLM functionalities for GPT-2 decoder-only model versions using Transformers library.
-* **Retrieval**
+* **Retrievers**
   * **FAISSWrapper:** Class containing embedding, indexing, and retrieval functionalities using FAISS library.
 
 Further information about the *llm_wrappers* package can be found in the next sections:
 
 - [Installation](#installation)
 - [Getting Started](#getting-started)
-- [Model Version](#model-versions)
-- [Generation Function](#generation-function)
-- [Training Functions](#training-functions)
+- [Generators](#generators)
+  - [Model Version](#model-versions)
+  - [Generation Function](#generation-function)
+  - [Training Functions](#training-functions)
+- [Retriever](#retriever)
+  - [Chunking](#chunking)
+  - [Web Search Data](#web-search-data)
 - [RAG Systems](#rag-systems)
 - [License](#license)
 
@@ -59,7 +63,7 @@ pip install .
 
 ## Getting Started
 
-The current implementation offers a Python class that acts as a wrapper to facilitate the management of [Flan-T5](https://huggingface.co/docs/transformers/model_doc/flan-t5) language model, including the model loading and text generation, as well as advanced functionalities such as model training or efficient fine-tuning (PEFT-LoRA).
+The current implementation offers a Python classes that act as wrappers to facilitate the management of Large Language Models, including the model loading and text generation, as well as advanced functionalities such as model training or efficient fine-tuning (PEFT-LoRA).
 
 A very basic example of the use of the *flan_t5_wrapper* Python class is shown below. This code snippet loads (downloads) the pre-trained `google/flan-t5-small` model and generates text based on the text included in the `input` variable.
 
@@ -86,11 +90,20 @@ if __name__ == "__main__":
 
 Additional examples can also be found in the [examples](https://github.com/aitor-ibarguren/llm_wrappers/tree/main/examples) folder.
 
-## Model Versions
+## Generators
+
+The repository offers a set of Python wrapper classes to manage different LLM models (generators). Specifically, it includes the next classes:
+* **FlanT5Wrapper:** Class containing LLM functionalities for FLAN-T5 model versions using Transformers library.
+* **BARTWrapper:** Class containing LLM functionalities for BART model versions using Transformers library.
+* **GPT2Wrapper:** Class containing LLM functionalities for GPT-2 decoder-only model versions using Transformers library.
+
+The next sections provide further information about the models versions of each class, as well as the generation and training functions.
+
+### Model Versions
 
 The next lines provide further information about the different model versions supported in the different model wrappers.
 
-### FLAN-T5
+#### FLAN-T5
 
 The `FlanT5Wrapper` class allows managing the standard five model versions:
 * Small: `google/flan-t5-small`
@@ -116,7 +129,7 @@ flan_t5_wrapper_xl = FlanT5Wrapper(FlanT5Type.XL)
 flan_t5_wrapper_xxl = FlanT5Wrapper(FlanT5Type.XXL)
 ```
 
-### BART
+#### BART
 
 The `BARTWrapper` class allows managing the standard five model versions:
 * Base: `facebook/bart-base`
@@ -133,7 +146,7 @@ bart_wrapper_base = BARTWrapper(BARTType.BASE)
 bart_wrapper_large = BARTWrapper(BARTType.LARGE)
 ```
 
-### GPT-2
+#### GPT-2
 
 The `GPT2Wrapper` class allows managing the standard five model versions:
 * Base: `gpt2`
@@ -156,7 +169,7 @@ gpt2_wrapper_large = GPT2Wrapper(GPT2Type.LARGE)
 gpt2_wrapper_xl = GPT2Wrapper(GPT2Type.XL)
 ```
 
-## Generation Function
+### Generation Function
 
 All wrapper classes include a generation function to produce text from user-provided input. Specifically, the `generate` function includes the following set of parameters:
 
@@ -171,11 +184,11 @@ The function internally tokenizes the prompt and decodes the generated output to
 
 Additionally, the `generate_list` extends the previous function to allow the batch generation from a list of prompts.
 
-## Training Functions
+### Training Functions
 
 The LLM wrappers include functions for training and fine-tuning the models, facilitating their adjustment to custom applications and data. The current implementation includes functions to train (fine-tune) and PEFT (Parameter-Efficient Fine-Tuning) the models. The next lines provide information about both fine-tuning functions.
 
-### Train Model
+#### Train Model
 
 The `train_model` function allows fine-tuning the complete model based on the provided input/output data, modifying all model parameters. Therefore, the computational cost of this approach is significantly higher and may lead to drawbacks such as catastrophic forgetting. The `train_model` function includes the following set of parameters:
 
@@ -214,7 +227,7 @@ if __name__ == "__main__":
     main()
 ```
 
-### PEFT LoRA Train Model
+#### PEFT LoRA Train Model
 
 The `peft_lora_train_model` function allows a parameter-efficient fine-tuning of the model based on the popular LoRA technique, which freezes the original model and injects trainable low-rank matrices to reduce greatly the number of trainable parameters. Therefore, the computational cost of this approach is significantly lower, usually less than 2%. The `peft_lora_train_model` function includes the following set of parameters:
 
@@ -252,6 +265,60 @@ def main():
 if __name__ == "__main__":
     main()
 ```
+
+## Retriever
+
+The repository also offers a Python wrapper class to manage a retriever based on [FAISS](https://github.com/facebookresearch/faiss) library. This wrapper includes functions that facilitate the management of an external knowledge base implementented as a vector database. Particularly, the class includes functions for the next tasks:
+
+- Creatin of new indexes.
+- Saving and loading user created indexes.
+- Data loading in the index, including user defined strings or batch processing functions (loading data from a CSV file or PDFs from a folder). Batch processing functions also include chunking capabilitires.
+- Search functions.
+
+The next code snippet provides an example of creating a rnew index, loading data from a CSV and a folder with PDFs, and finally saving the index for further use:
+
+```python
+import os
+
+from faiss_wrapper.faiss_wrapper import FAISSWrapper
+
+
+def main():
+    # Create retriever wrapper
+    retriever = FAISSWrapper()
+    # Init new index
+    retriever.init_new_index()
+    # Add CSV to index
+    current_dir = os.path.dirname(__file__)
+    file_path = os.path.join(current_dir, 'data', 'shop_data.csv')
+    retriever.add_from_csv(file_path, 'shop data')
+    # Add PDFs to index
+    folder_path = os.path.join(current_dir, 'data', 'shop_pdfs')
+    retriever.add_pdfs_from_folder(folder_path)
+    # Save index
+    retriever.save_index(current_dir, 'shop_index')
+
+
+if __name__ == '__main__':
+    main()
+```
+
+### Chunking
+
+The processing functions include the capability to chunk the loaded data strings to facilitate its use in RAG systems. Namely, the processing functions include two parameters to tune the chunking opertation:
+
+- `chunk_size`: Number of characters of the chunk.
+- `chunk_overlap`: Number of characters overlaped in adjacent chunk.
+
+### Web Search Data
+
+Additionally, the wrapper includes a function to retrieve data from web searches and insert it (after chunkg) on the index. Particularly, the web search is carried out through [DuckDuckGo](https://duckduckgo.com/) as it does not require any API key.
+
+Even so, due to **legal and ethical issues**, the URLs are analysed to check that there is not any copyright mention or tag, skipping all searches that might be conflictive (only including Wikipedia or Creative Commons URLs). The retrieved information is chunked, before embedding it and inserted in the index.
+
+> **⚠️ Disclaimer:** This project includes code that performs web scraping for the purpose of retrieving publicly available information to supplement the RAG (Retrieval-Augmented Generation) system. Users are solely responsible for how they use this code.
+> Ensure you review and comply with the Terms of Service, robots.txt, and any applicable policies of any website you scrape.
+> No scraped data is included in this repository.
 
 ## RAG Systems
 
