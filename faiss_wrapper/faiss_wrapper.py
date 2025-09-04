@@ -1,17 +1,18 @@
 import os
+import random
+import re
+import unicodedata
+from urllib.parse import urlparse
 
 import faiss
 import fitz  # For PyMuPDF
 import pandas
-import random
-import re
 import requests
 from bs4 import BeautifulSoup
 from ddgs import DDGS
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
-from urllib.parse import urlparse
 
 
 class FAISSWrapper:
@@ -41,6 +42,11 @@ class FAISSWrapper:
             "DNT": "1",
             "Connection": "keep-alive"
         }
+
+        self._junk_patterns = [
+            "cookie settings", "accept cookies", "sign up", "login", "terms of service",
+            "privacy policy", "navigation", "menu", "footer", "all rights reserved", "©",
+        ]
 
     def init_new_index(self) -> bool:
         # Check if already initialized
@@ -366,6 +372,47 @@ class FAISSWrapper:
 
         return False
 
+    # Junk removal helpers
+    def _is_junk(self, chunk: str) -> bool:
+        text_lower = chunk.lower()
+        return any(pat in text_lower for pat in self._junk_patterns)
+
+    def _is_low_info(self, chunk: str) -> bool:
+        tokens = chunk.split()
+        unique_ratio = len(set(tokens)) / len(tokens) if tokens else 0
+        return unique_ratio < 0.3
+
+    def _count_unicode_scripts(self, chunk: str) -> bool:
+        scripts = set()
+        for char in chunk:
+            if char.isalpha():
+                try:
+                    script = unicodedata.name(char).split(' ')[0]
+                    scripts.add(script)
+                except ValueError:
+                    continue
+        return len(scripts)
+
+    def _is_ui_junk(self, chunk: str) -> bool:
+        tokens = chunk.split()
+        short_word_ratio = sum(1 for t in tokens if len(t) <= 3) / len(tokens)
+        capitalized_ratio = sum(1 for t in tokens if t.istitle()) / len(tokens)
+        no_punct = chunk.count('.') + chunk.count(',') < 2
+        return short_word_ratio > 0.3 and capitalized_ratio > 0.2 and no_punct
+
+    def _clean_chunks(self, chunks: list[str]) -> list[str]:
+        clean_chunks = []
+
+        for chunk in tqdm(chunks, desc="Chunk cleaning"):
+            if (
+                not self._is_junk(chunk) and not self._is_low_info(chunk) and
+                self._count_unicode_scripts(chunk) <= 2 and
+                not self._is_ui_junk(chunk)
+            ):
+                clean_chunks.append(chunk)
+
+        return clean_chunks
+
     def add_web_search_DDG(self, web_search_query: str, max_results: int = 5,
                            chunk_size: int = 512,
                            chunk_overlap: int = 50) -> bool:
@@ -404,7 +451,7 @@ class FAISSWrapper:
                     main_or_article = bs.find('main') or bs.find('article')
                     if main_or_article:
                         clean_url_content = main_or_article.get_text(
-                            strip=True)
+                            separator=" ", strip=True)
                     else:
                         print(
                             self._YELLOW +
@@ -412,10 +459,11 @@ class FAISSWrapper:
                             + url + self._RST)
                         continue
                     # Additional text cleaning
-                    clean_url_content = re.sub(r'\n\s*\n+', '\n\n',
-                                               clean_url_content)
+                    # clean_url_content = re.sub(r'\n\s*\n+', '\n\n',
+                    #                            clean_url_content)
                     # Store
                     web_search_content.append(clean_url_content)
+                    # print(url + "\n" + clean_url_content)
         except Exception as e:
             self._handle_ddgs_error(e)
 
@@ -427,7 +475,14 @@ class FAISSWrapper:
         chunks = self._chunk_texts(web_search_content, chunk_size,
                                    chunk_overlap)
 
-        print(f"Web search information divided into {len(chunks)} chunks")
+        print(f'Web search information divided into {len(chunks)} chunks')
+
+        # Clean chunks
+        chunks = self._clean_chunks(chunks)
+
+        print(f'Chunks after cleaning: {len(chunks)}')
+
+        print(chunks[:10])
 
         # Texts into embedding
         print('Embedding chunks...')

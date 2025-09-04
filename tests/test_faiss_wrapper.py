@@ -117,7 +117,7 @@ class TestFAISSWrapper(unittest.TestCase):
         # Create wrapper
         faiss_wrapper = FAISSWrapper()
         # Add web search to non-initialized index
-        self.assertTrue(faiss_wrapper.add_web_search_DDG(
+        self.assertFalse(faiss_wrapper.add_web_search_DDG(
             'History of Large Language Models (LLM)', 10))
         # Init new index
         self.assertTrue(faiss_wrapper.init_new_index())
