@@ -1,3 +1,4 @@
+import ast
 import os
 import random
 import re
@@ -6,12 +7,15 @@ from urllib.parse import urlparse
 
 import faiss
 import fitz  # For PyMuPDF
+import numpy as np
 import pandas
 import requests
 from bs4 import BeautifulSoup
 from ddgs import DDGS
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from scipy.sparse import csr_matrix, load_npz, save_npz
 from sentence_transformers import SentenceTransformer
+from sklearn.feature_extraction.text import TfidfVectorizer
 from tqdm import tqdm
 
 
@@ -48,12 +52,14 @@ class FAISSWrapper:
             "privacy policy", "navigation", "menu", "footer", "all rights reserved", "©",
         ]
 
-    def init_new_index(self) -> bool:
+    def init_new_index(self, keyword_number: int = 3) -> bool:
         # Check if already initialized
         if self._index_init:
             print(self._RED + 'Index already initialized/loaded!' + self._RST)
             return False
 
+        # Store keyword number value
+        self._keyword_number = keyword_number
         # Init model
         self._model = SentenceTransformer(self._model_name)
         # Init index
@@ -62,6 +68,8 @@ class FAISSWrapper:
 
         self._index = faiss.IndexHNSWFlat(dimensions, 16)
         self._texts = []
+        self._tfidf_matrix = None
+        self._keywords = []
 
         self._index_init = True
 
@@ -82,11 +90,15 @@ class FAISSWrapper:
 
         return False
 
-    def load_stored_index(self, path: str, index_name: str) -> bool:
+    def load_stored_index(self, path: str, index_name: str,
+                          keyword_number: int = 3) -> bool:
         # Check if already initialized
         if self._index_init:
             print(self._RED + 'Index already initialized/loaded!' + self._RST)
             return False
+
+        # Store keyword number value
+        self._keyword_number = keyword_number
 
         # Ensure the path ends with a '/'
         if not path.endswith('/'):
@@ -95,6 +107,7 @@ class FAISSWrapper:
         # Manage paths and file names
         complete_index_path = path + index_name + '.faiss'
         complete_raw_text_path = path + index_name + '.csv'
+        complete_tf_idf_path = path + index_name + '.npz'
 
         # Load index
         print(f"Loading index '{index_name}' from '{path}'...")
@@ -127,11 +140,16 @@ class FAISSWrapper:
         try:
             csv_data = pandas.read_csv(complete_raw_text_path, sep=';')
         except Exception as e:
-            return self._handle_csv_load_error(e, complete_raw_text_path)
+            print(self._RED + 'Error loading CSV file: ' + e + self._RST)
+            return False
 
         # Get values of provided field
         try:
+            # Get text
             self._texts = csv_data['text'].tolist()
+            # Get keywords
+            csv_data['keywords'] = csv_data['keywords'].apply(ast.literal_eval)
+            self._keywords = csv_data['keywords'].tolist()
         except KeyError:
             print(self._RED + 'Error parsing raw text CSV file' + self._RST)
             return False
@@ -141,6 +159,13 @@ class FAISSWrapper:
             print(self._RED +
                   "Index and raw data files' row number do not match" +
                   self._RST)
+            return False
+
+        # Load NPZ file
+        try:
+            self._tfidf_matrix = load_npz(complete_tf_idf_path)
+        except Exception as e:
+            print(self._RED + 'Error loading NPZ file: ' + e + self._RST)
             return False
 
         # Output
@@ -168,6 +193,28 @@ class FAISSWrapper:
 
         return all_chunks
 
+    def _extract_matrix_and_keywords(self, texts: list[str],
+                                     top_n: int = 3
+                                     ) -> tuple[csr_matrix, list[list[str]]]:
+        # Init list
+        keywords = []
+
+        # Initialize TF-IDF Vectorizer
+        tf_idf_vectorizer = TfidfVectorizer(stop_words='english')
+        # Calculate matrix
+        tfidf_matrix = tf_idf_vectorizer.fit_transform(texts)
+        # Get words
+        words = tf_idf_vectorizer.get_feature_names_out()
+        # Loop in texts
+        for doc_index, text in enumerate(texts):
+            tf_idf_vector = tfidf_matrix[doc_index]
+            sorted_idx = np.argsort(tf_idf_vector.data)[::-1][:top_n]
+            keywords.append(
+                [words[tf_idf_vector.indices[i]] for i in sorted_idx]
+            )
+
+        return tfidf_matrix, keywords
+
     def add_to_index(self, texts: list[str], chunking: bool = False,
                      chunk_size: int = 256, chunk_overlap: int = 25) -> bool:
         # Check if already initialized
@@ -192,6 +239,11 @@ class FAISSWrapper:
 
         # Store original texts
         self._texts.extend(_texts)
+
+        # Extract & store keywords
+        tfidf_matrix, keywords = self._extract_matrix_and_keywords(self._texts)
+        self._tfidf_matrix = tfidf_matrix
+        self._keywords = keywords
 
         # Output
         print(
@@ -252,6 +304,11 @@ class FAISSWrapper:
 
         # Store original texts
         self._texts.extend(texts)
+
+        # Extract & store matrix and keywords
+        tfidf_matrix, keywords = self._extract_matrix_and_keywords(self._texts)
+        self._tfidf_matrix = tfidf_matrix
+        self._keywords = keywords
 
         # Output
         print(
@@ -319,6 +376,11 @@ class FAISSWrapper:
 
         # Store original texts
         self._texts.extend(chunks)
+
+        # Extract & store matrix and keywords
+        tfidf_matrix, keywords = self._extract_matrix_and_keywords(self._texts)
+        self._tfidf_matrix = tfidf_matrix
+        self._keywords = keywords
 
         # Output
         print(
@@ -482,8 +544,6 @@ class FAISSWrapper:
 
         print(f'Chunks after cleaning: {len(chunks)}')
 
-        print(chunks[:10])
-
         # Texts into embedding
         print('Embedding chunks...')
         embeddings = self._model.encode(chunks, convert_to_numpy=True)
@@ -493,6 +553,11 @@ class FAISSWrapper:
 
         # Store original texts
         self._texts.extend(chunks)
+
+        # Extract & store matrix and keywords
+        tfidf_matrix, keywords = self._extract_matrix_and_keywords(self._texts)
+        self._tfidf_matrix = tfidf_matrix
+        self._keywords = keywords
 
         # Output
         print(
@@ -545,6 +610,7 @@ class FAISSWrapper:
         # Manage paths and file names
         complete_index_path = path + index_name + '.faiss'
         complete_raw_text_path = path + index_name + '.csv'
+        complete_tf_idf_path = path + index_name + '.npz'
 
         # Save/write index
         try:
@@ -563,8 +629,12 @@ class FAISSWrapper:
 
         # Save raw text data
         df = pandas.DataFrame(self._texts, columns=['text'])
+        df['keywords'] = self._keywords
         df.to_csv(complete_raw_text_path, sep=';',
                   index=True, index_label='ID')
+
+        # Save TF-IDF matrix
+        save_npz(complete_tf_idf_path, self._tfidf_matrix)
 
         # Output
         print('Index and raw text files successfully created!')
