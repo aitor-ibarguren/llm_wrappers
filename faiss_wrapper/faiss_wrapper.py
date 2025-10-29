@@ -16,6 +16,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from scipy.sparse import csr_matrix, load_npz, save_npz
 from sentence_transformers import SentenceTransformer
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 from tqdm import tqdm
 
 
@@ -68,6 +69,7 @@ class FAISSWrapper:
 
         self._index = faiss.IndexHNSWFlat(dimensions, 16)
         self._texts = []
+        self._tf_idf_vectorizer = None
         self._tfidf_matrix = None
         self._keywords = []
 
@@ -199,12 +201,14 @@ class FAISSWrapper:
         # Init list
         keywords = []
 
-        # Initialize TF-IDF Vectorizer
-        tf_idf_vectorizer = TfidfVectorizer(stop_words='english')
+        # Check if TF-IDF Vectorizer init
+        if self._tf_idf_vectorizer is None:
+            # Initialize TF-IDF Vectorizer
+            self._tf_idf_vectorizer = TfidfVectorizer(stop_words='english')
         # Calculate matrix
-        tfidf_matrix = tf_idf_vectorizer.fit_transform(texts)
+        tfidf_matrix = self._tf_idf_vectorizer.fit_transform(texts)
         # Get words
-        words = tf_idf_vectorizer.get_feature_names_out()
+        words = self._tf_idf_vectorizer.get_feature_names_out()
         # Loop in texts
         for doc_index, text in enumerate(texts):
             tf_idf_vector = tfidf_matrix[doc_index]
@@ -596,6 +600,126 @@ class FAISSWrapper:
             output_texts.append(row_texts)
 
         return True, output_texts, distances
+
+    def search_by_keyword(
+            self, texts: list[str],
+            top_k: int = 5
+    ) -> tuple[bool, list[list[str]], list[list[float]]]:
+        # Check if already initialized
+        if not self._index_init:
+            print(self._RED + 'Index not initialized/loaded yet!' + self._RST)
+            return False, [], []
+
+        # Check if TF-IDF Vectorizer init
+        if self._tf_idf_vectorizer is None:
+            # Initialize TF-IDF Vectorizer
+            self._tf_idf_vectorizer = TfidfVectorizer(stop_words='english')
+        # Calculate matrix
+        tfidf_matrix = self._tf_idf_vectorizer.transform(texts)
+
+        # Cosine similarity
+        similarity = cosine_similarity(tfidf_matrix, self._tfidf_matrix)
+
+        # Loop in texts
+        output_texts = []
+        output_similarities = []
+        for doc_index, text in enumerate(texts):
+            similarity_vector = similarity[doc_index]
+            sorted_idx = np.argsort(similarity_vector.data)[::-1][:top_k]
+            # Iterate and remove zero similarity values
+            row_texts = []
+            row_similarities = []
+            for i in sorted_idx:
+                if similarity_vector[i] != 0:
+                    row_texts.append(self._texts[i])
+                    row_similarities.append(similarity_vector[i])
+            # Insert in output list
+            output_texts.append(row_texts)
+            output_similarities.append(row_similarities)
+
+        return True, output_texts, output_similarities
+
+    def _normalize_vals(self, distances: list[float]):
+        # Get min and max
+        min_val, max_val = min(distances), max(distances)
+        # Check if min and max are equal
+        if max_val == min_val:
+            return [0.0 for _ in distances]
+
+        return [(val - min_val) / (max_val - min_val) for val in distances]
+
+    def hybrid_search(
+            self, texts: list[str],
+            top_k: int = 5, alpha: int = 0.6
+    ) -> tuple[bool, list[list[str]], list[list[float]]]:
+        # Check if already initialized
+        if not self._index_init:
+            print(self._RED + 'Index not initialized/loaded yet!' + self._RST)
+            return False, [], []
+
+        # Semantic search (top_k x 2 to ensure that a good combined search)
+        res, semantic_texts, semantic_distances = self.search(texts, 2 * top_k)
+
+        # Check result
+        if not res:
+            print(self._RED + 'Error in semantic search!' + self._RST)
+            return False, [], []
+
+        # Keyword search (top_k x 2 to ensure that a good combined search)
+        res, keyword_texts, keyword_similarities = self.search_by_keyword(
+            texts,
+            2 * top_k
+        )
+
+        # Normalize distances
+        normalized_semantic_distances = [self._normalize_vals(
+            sublist) for sublist in semantic_distances]
+        normalized_keyword_similarities = [self._normalize_vals(
+            sublist) for sublist in keyword_similarities]
+
+        # Invert similarity to compare with distances
+        normalized_keyword_similarities_inv = [
+            [1.0 - val for val in list]
+            for list in normalized_keyword_similarities
+        ]
+
+        # Iterate over each search
+        output_texts = []
+        output_distances = []
+        for st, kt, nsd, nksi in zip(semantic_texts, keyword_texts, normalized_semantic_distances, normalized_keyword_similarities_inv):
+            # Create dictionaries
+            semantic_dict = dict(zip(st, nsd))
+            keyword_dict = dict(zip(kt, nksi))
+
+            # Get all texts
+            all_texts = set(semantic_dict) | set(keyword_dict)
+
+            # Calculate combined distances
+            combined_results = []
+            for text in all_texts:
+                # If text is not found, distance = 1.0
+                semantic_dist = semantic_dict.get(text, 1.0)
+                keyword_dist = keyword_dict.get(text, 1.0)
+                combined_dist = alpha * semantic_dist + \
+                    (1 - alpha) * keyword_dist
+                combined_results.append({"text": text,
+                                         "combined_distance": combined_dist})
+
+            # Sort
+            sorted_combined_distances = sorted(combined_results,
+                                               key=lambda x:
+                                               x["combined_distance"])[:top_k]
+
+            # Extract & insert texts & distances
+            output_texts.append([item["text"]
+                                for item in sorted_combined_distances]
+                                )
+            output_distances.append(
+                [item["combined_distance"]
+                    for item in sorted_combined_distances]
+            )
+
+        return True, output_texts, output_distances
 
     def save_index(self, path: str, index_name: str) -> bool:
         # Check if already initialized

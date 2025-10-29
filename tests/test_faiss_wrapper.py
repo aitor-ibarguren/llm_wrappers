@@ -203,6 +203,42 @@ class TestFAISSWrapper(unittest.TestCase):
             new_faiss_wrapper.load_stored_index(current_dir, 'test_index_2')
         )
 
+    def test_keyword_search(self):
+        # Create wrapper
+        faiss_wrapper = FAISSWrapper()
+        # Init new index
+        self.assertTrue(faiss_wrapper.init_new_index())
+        # Add CSV to index
+        current_dir = os.path.dirname(__file__)
+        file_path = os.path.join(current_dir, 'data', 'shop_data.csv')
+        self.assertTrue(faiss_wrapper.add_from_csv(
+            file_path, 'shop data'))
+        # Try loading stored index
+        self.assertTrue(
+            faiss_wrapper.search_by_keyword(
+                ["Can I buy guitar strings and picks?",
+                 "Have you got an online webstore?"]
+            )
+        )
+
+    def test_hybrid_search(self):
+        # Create wrapper
+        faiss_wrapper = FAISSWrapper()
+        # Init new index
+        self.assertTrue(faiss_wrapper.init_new_index())
+        # Add CSV to index
+        current_dir = os.path.dirname(__file__)
+        file_path = os.path.join(current_dir, 'data', 'shop_data.csv')
+        self.assertTrue(faiss_wrapper.add_from_csv(
+            file_path, 'shop data'))
+        # Try loading stored index
+        self.assertTrue(
+            faiss_wrapper.hybrid_search(
+                ["Can I buy guitar strings and picks?",
+                 "Have you got an online webstore?"]
+            )
+        )
+
 
 if __name__ == '__main__':
     unittest.main()
