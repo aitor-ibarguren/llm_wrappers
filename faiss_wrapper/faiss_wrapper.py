@@ -12,7 +12,7 @@ import pandas
 import requests
 from bs4 import BeautifulSoup
 from ddgs import DDGS
-from langchain_text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from scipy.sparse import csr_matrix, load_npz, save_npz
 from sentence_transformers import SentenceTransformer
 from sklearn.feature_extraction.text import TfidfVectorizer
