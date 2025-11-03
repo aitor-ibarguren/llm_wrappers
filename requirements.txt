@@ -18,6 +18,8 @@ huggingface-hub
 idna==3.10
 Jinja2
 langchain
+langchain-core
+langchain-text-splitters
 MarkupSafe
 mpmath
 multidict
