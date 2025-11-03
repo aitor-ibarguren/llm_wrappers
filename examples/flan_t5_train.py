@@ -22,7 +22,7 @@ def main():
     flan_t5_wrapper.train_model(dataset, "INSTRUCTION", "RESPONSE",
                                 "./trained_flan_t5_school_math",
                                 5, 0.00025, True)
-    
+
     # Load trained model
     trained_flan_t5_wrapper = FlanT5Wrapper()
     trained_flan_t5_wrapper.load_stored_model("./trained_flan_t5_school_math")

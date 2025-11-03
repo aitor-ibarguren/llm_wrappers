@@ -50,8 +50,8 @@ def main():
     # Generate
     res, outputs = generator.generate_list(augmented_prompts)
     for input_str, output_str in zip(prompts, outputs):
-            print('INPUT: ' + input_str)
-            print('OUTPUT: ' + output_str)
+        print('INPUT: ' + input_str)
+        print('OUTPUT: ' + output_str)
 
 
 if __name__ == '__main__':

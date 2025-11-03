@@ -103,8 +103,7 @@ class FAISSWrapper:
         self._keyword_number = keyword_number
 
         # Ensure the path ends with a '/'
-        if not path.endswith('/'):
-            path += '/'
+        path = path if path.endswith('/') else path + "/"
 
         # Manage paths and file names
         complete_index_path = path + index_name + '.faiss'
@@ -138,22 +137,17 @@ class FAISSWrapper:
 
         self._index_init = True
 
-        # Load raw text CSV
+        # Manage CSV
         try:
+            # Load raw text CSV
             csv_data = pandas.read_csv(complete_raw_text_path, sep=';')
-        except Exception as e:
-            print(self._RED + 'Error loading CSV file: ' + e + self._RST)
-            return False
-
-        # Get values of provided field
-        try:
             # Get text
             self._texts = csv_data['text'].tolist()
             # Get keywords
             csv_data['keywords'] = csv_data['keywords'].apply(ast.literal_eval)
             self._keywords = csv_data['keywords'].tolist()
-        except KeyError:
-            print(self._RED + 'Error parsing raw text CSV file' + self._RST)
+        except Exception as e:
+            print(self._RED + 'Error loading/parsing CSV file: ' + e + self._RST)
             return False
 
         # Check row numbers
@@ -686,7 +680,9 @@ class FAISSWrapper:
         # Iterate over each search
         output_texts = []
         output_distances = []
-        for st, kt, nsd, nksi in zip(semantic_texts, keyword_texts, normalized_semantic_distances, normalized_keyword_similarities_inv):
+        for st, kt, nsd, nksi in zip(semantic_texts, keyword_texts,
+                                     normalized_semantic_distances,
+                                     normalized_keyword_similarities_inv):
             # Create dictionaries
             semantic_dict = dict(zip(st, nsd))
             keyword_dict = dict(zip(kt, nksi))

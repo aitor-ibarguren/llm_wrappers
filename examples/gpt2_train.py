@@ -22,7 +22,7 @@ def main():
     gpt2_wrapper.train_model(dataset, "INSTRUCTION", "RESPONSE",
                              "./trained_gpt2_school_math",
                              5, 0.00025, True)
-    
+
     # Load trained model
     trained_gpt2_wrapper = GPT2Wrapper()
     trained_gpt2_wrapper.load_stored_model("./trained_gpt2_school_math")
