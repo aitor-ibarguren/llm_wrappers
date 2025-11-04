@@ -36,7 +36,9 @@ Further information about the *llm_wrappers* package can be found in the next se
 - [Retriever](#retriever)
   - [Chunking](#chunking)
   - [Web Search Data](#web-search-data)
+  - [Keyword & Hybrid Search](#keyword--hybrid-search)
 - [RAG Systems](#rag-systems)
+- [Dockerfile](#dockerfile)
 - [License](#license)
 
 ## Installation
@@ -320,6 +322,12 @@ Even so, due to **legal and ethical issues**, the URLs are analysed to check tha
 > Ensure you review and comply with the Terms of Service, robots.txt, and any applicable policies of any website you scrape.
 > No scraped data is included in this repository.
 
+### Keyword & Hybrid Search
+
+The FAISS wrapper has been extended with the addition of a keyword-based search as well as hybrid search. The keyword search is based on of TF-IDF (Term Frequency – Inverse Document Frequency) algorithm included in *sklearn*.
+
+For additional information check functions `search_by_keyword` and `hybrid_search` of `faiss_wrapper`.
+
 ## RAG Systems
 
 To construct complex applications, such as Retrieval-augmented generation (RAG) systems, the repository contains wrapper classes that facilitate data embedding, indexing, and retrieval as a first step to generate augmented prompts to be sent to the LLMs.
@@ -387,6 +395,21 @@ def main():
 
 if __name__ == '__main__':
     main()
+```
+
+# Dockerfile
+
+To facilitate the usage and deployment of the wrapper classes, a Dockerfile is included. A Docker image that includes all the dependencies of the `llw_wrappers` repository as well the classes provided in this repository can be generated using the *docker build* command inside the repository folder:
+
+```bash
+docker build -t llm-wrappers .
+```
+
+The Docker image can be executed in interactive mode to test the provided classes within a containerized environment as:
+
+
+```bash
+docker run -it llm-wrappers:latest bash
 ```
 
 ## License
