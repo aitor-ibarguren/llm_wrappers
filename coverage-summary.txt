@@ -1,7 +1,7 @@
 ============================= test session starts ==============================
 platform linux -- Python 3.10.19, pytest-8.4.2, pluggy-1.6.0
 rootdir: /home/runner/work/llm_wrappers/llm_wrappers
-plugins: anyio-4.11.0, cov-7.0.0, langsmith-0.4.39
+plugins: anyio-4.11.0, cov-7.0.0, langsmith-0.4.40
 collected 29 items
 
 tests/test_bart_wrapper.py ......                                        [ 20%]
@@ -81,4 +81,4 @@ tests/test_flan_t5_wrapper.py           69      2    97%   6, 131
 tests/test_gpt2_wrapper.py              69      2    97%   6, 134
 ------------------------------------------------------------------
 TOTAL                                 1182     87    93%
-================= 29 passed, 19 warnings in 213.28s (0:03:33) ==================
+================= 29 passed, 19 warnings in 207.69s (0:03:27) ==================
