@@ -412,6 +412,12 @@ The Docker image can be executed in interactive mode to test the provided classe
 docker run -it llm-wrappers:latest bash
 ```
 
+activating the virtual environment inside the Docker image with command:
+
+```bash
+source venv/bin/activate
+```
+
 ## License
 
 The *llm_wrappers* repository has an Apache 2.0 license, as found in the [LICENSE](LICENSE) file.
