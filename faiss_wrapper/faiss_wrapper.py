@@ -174,8 +174,8 @@ class FAISSWrapper:
         # Instantiate the splitter if necessary
         if (
             self._splitter is None or
-            chunk_size != self._splitter.chunk_size or
-            chunk_overlap != self._splitter.chunk_overlap
+            chunk_size != self._splitter._chunk_size or
+            chunk_overlap != self._splitter._chunk_overlap
         ):
             self._splitter = RecursiveCharacterTextSplitter(
                 chunk_size=chunk_size,

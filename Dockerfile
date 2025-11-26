@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /home/ubuntu/
 
 # Clone llm_wrappers
-RUN git clone -b 26-python-312-compatible https://github.com/aitor-ibarguren/llm_wrappers.git
+RUN git clone https://github.com/aitor-ibarguren/llm_wrappers.git
 
 # Install python3-venv (for virtual environments)
 RUN apt-get update && apt-get install -y python3-venv
