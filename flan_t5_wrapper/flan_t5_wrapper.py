@@ -172,9 +172,7 @@ class FlanT5Wrapper:
     def generate(
         self,
         input_text: str,
-        max_new_tokens: int = 50,
-        temperature: float = 0.7,
-        top_p: float = 0.9
+        max_new_tokens: int = 50
     ) -> tuple[bool, str]:
         # Check if already loaded
         if not self._model_init:
@@ -188,9 +186,7 @@ class FlanT5Wrapper:
         # Get generated output
         output_ids = self._model.generate(
             **input_tokenized,
-            max_new_tokens=max_new_tokens,
-            temperature=temperature,
-            top_p=top_p
+            max_new_tokens=max_new_tokens
         )
 
         output = self._tokenizer.decode(output_ids[0],
@@ -202,9 +198,7 @@ class FlanT5Wrapper:
     def generate_list(
         self,
         input_texts: list[str],
-        max_new_tokens: int = 50,
-        temperature: float = 0.7,
-        top_p: float = 0.9
+        max_new_tokens: int = 50
     ) -> tuple[bool, list[str]]:
         # Check if already loaded
         if not self._model_init:
@@ -220,9 +214,7 @@ class FlanT5Wrapper:
         # Get generated output
         output_ids = self._model.generate(
             **inputs_tokenized,
-            max_new_tokens=max_new_tokens,
-            temperature=temperature,
-            top_p=top_p
+            max_new_tokens=max_new_tokens
         )
 
         outputs = self._tokenizer.batch_decode(output_ids,

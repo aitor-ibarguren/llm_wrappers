@@ -158,6 +158,8 @@ class FAISSWrapper:
             return False
 
         # Load NPZ file
+        self._tf_idf_vectorizer = None
+
         try:
             self._tfidf_matrix = load_npz(complete_tf_idf_path)
         except Exception as e:
@@ -608,6 +610,7 @@ class FAISSWrapper:
         if self._tf_idf_vectorizer is None:
             # Initialize TF-IDF Vectorizer
             self._tf_idf_vectorizer = TfidfVectorizer(stop_words='english')
+            self._tf_idf_vectorizer.fit(self._texts)
         # Calculate matrix
         tfidf_matrix = self._tf_idf_vectorizer.transform(texts)
 
