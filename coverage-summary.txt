@@ -38,7 +38,7 @@ tests/test_bart_wrapper.py::TestBARTWrapper::test_train_model
     trainer = Seq2SeqTrainer(
 
 tests/test_flan_t5_wrapper.py::TestFlanT5Wrapper::test_train_model
-  /home/runner/work/llm_wrappers/llm_wrappers/flan_t5_wrapper/flan_t5_wrapper.py:310: FutureWarning: `tokenizer` is deprecated and will be removed in version 5.0.0 for `Seq2SeqTrainer.__init__`. Use `processing_class` instead.
+  /home/runner/work/llm_wrappers/llm_wrappers/flan_t5_wrapper/flan_t5_wrapper.py:302: FutureWarning: `tokenizer` is deprecated and will be removed in version 5.0.0 for `Seq2SeqTrainer.__init__`. Use `processing_class` instead.
     trainer = Seq2SeqTrainer(
 
 tests/test_gpt2_wrapper.py::TestFlanT5Wrapper::test_peft_train_model
@@ -58,7 +58,7 @@ Name                                 Stmts   Miss  Cover   Missing
 bart_wrapper/__init__.py                 0      0   100%
 bart_wrapper/bart_wrapper.py           153     12    92%   35-37, 58, 88-90, 94, 126-128, 135
 faiss_wrapper/__init__.py                0      0   100%
-faiss_wrapper/faiss_wrapper.py         387     40    90%   87, 132-136, 149-151, 155-158, 163-165, 255-264, 400, 426-433, 452-453, 527-528, 532, 604-605, 610, 651-652, 659-660, 739-741, 743-745
+faiss_wrapper/faiss_wrapper.py         389     41    89%   87, 132-136, 149-151, 155-158, 165-167, 257-266, 402, 428-435, 454-455, 529-530, 534, 606-607, 612-613, 654-655, 662-663, 742-744, 746-748
 flan_t5_wrapper/__init__.py              0      0   100%
 flan_t5_wrapper/flan_t5_wrapper.py     156     12    92%   41-43, 64, 94-96, 100, 132-134, 141
 gpt2_wrapper/__init__.py                 0      0   100%
@@ -70,5 +70,5 @@ tests/test_faiss_wrapper.py            120      2    98%   6, 244
 tests/test_flan_t5_wrapper.py           69      2    97%   6, 131
 tests/test_gpt2_wrapper.py              69      2    97%   6, 134
 ------------------------------------------------------------------
-TOTAL                                 1182     86    93%
-================= 29 passed, 15 warnings in 214.27s (0:03:34) ==================
+TOTAL                                 1184     87    93%
+================= 29 passed, 15 warnings in 211.04s (0:03:31) ==================
