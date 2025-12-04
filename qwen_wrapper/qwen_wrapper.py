@@ -298,7 +298,7 @@ class QwenWrapper:
         self._model.config.use_cache = False
 
         # Training args
-        training_args = Seq2SeqTrainingArguments(
+        training_args = TrainingArguments(
             output_dir=trained_model_folder,
             num_train_epochs=num_train_epochs,
             learning_rate=learning_rate,
