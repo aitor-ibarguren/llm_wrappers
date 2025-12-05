@@ -10,18 +10,20 @@ from transformers import (AutoModelForCausalLM, AutoTokenizer,
 
 
 class QwenType(Enum):
-    TINY = 1
-    SMALL = 2
-    BASE = 3
-    LARGE = 4
-    XL = 5
+    XTINY = 1
+    TINY = 2
+    SMALL = 3
+    BASE = 4
+    LARGE = 5
+    XL = 6
 
 
 class QwenWrapper:
 
-    def __init__(self, model_type: QwenType = QwenType.TINY):
+    def __init__(self, model_type: QwenType = QwenType.XTINY):
         # Init vars
         qwen_type_names = {
+            QwenType.XTINY: "Qwen/Qwen2.5-0.5B-Instruct",
             QwenType.TINY: "Qwen/Qwen2.5-1.5B-Instruct",
             QwenType.SMALL: "Qwen/Qwen2.5-3B-Instruct",
             QwenType.BASE: "Qwen/Qwen2.5-7B-Instruct",
