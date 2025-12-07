@@ -19,6 +19,8 @@ This repository contains Python classes to load, manage, export, and fine-tune L
 
 List of available classes:
 * **Generators**
+  * **DeepseekWrapper:** Class containing LLM functionalities for Deepseek distilled model versions using Transformers library.
+  * **QwenWrapper:** Class containing LLM functionalities for Qwen model versions using Transformers library.
   * **FlanT5Wrapper:** Class containing LLM functionalities for FLAN-T5 model versions using Transformers library.
   * **BARTWrapper:** Class containing LLM functionalities for BART model versions using Transformers library.
   * **GPT2Wrapper:** Class containing LLM functionalities for GPT-2 decoder-only model versions using Transformers library.
@@ -65,22 +67,22 @@ pip install .
 
 ## Getting Started
 
-The current implementation offers a Python classes that act as wrappers to facilitate the management of Large Language Models, including the model loading and text generation, as well as advanced functionalities such as model training or efficient fine-tuning (PEFT-LoRA).
+The current implementation offers a Python classes that act as wrappers to facilitate the management of Large Language Models, including the model loading and text generation, as well as advanced functionalities such as model training or efficient fine-tuning (PEFT-LoRA) for some of the LLM models.
 
-A very basic example of the use of the *flan_t5_wrapper* Python class is shown below. This code snippet loads (downloads) the pre-trained `google/flan-t5-small` model and generates text based on the text included in the `input` variable.
+A very basic example of the use of the *qwen_wrapper* Python class is shown below. This code snippet loads (downloads) the pre-trained `Qwen/Qwen2.5-0.5B-Instruct` model and generates text based on the text included in the `input` variable.
 
 ```python
-from flan_t5_wrapper.flan_t5_wrapper import FlanT5Wrapper
+from qwen_wrapper.qwen_wrapper import QwenWrapper
 
 
 def main():
     # Create wrapper
-    flan_t5_wrapper = FlanT5Wrapper()
+    qwen_wrapper = QwenWrapper()
     # Load pre-trained
-    flan_t5_wrapper.load_pretrained_model()
+    qwen_wrapper.load_pretrained_model()
     # Generate
     input = "Ask my question"
-    res, output = flan_t5_wrapper.generate(input)
+    res, output = qwen_wrapper.generate(input)
     if res:
       print("INPUT: " + input)
       print("OUTPUT: " + output)
@@ -95,6 +97,8 @@ Additional examples can also be found in the [examples](https://github.com/aitor
 ## Generators
 
 The repository offers a set of Python wrapper classes to manage different LLM models (generators). Specifically, it includes the next classes:
+* **DeepseekWrapper:** Class containing LLM functionalities for Deepseek distilled model versions using Transformers library.
+* **QwenWrapper:** Class containing LLM functionalities for Qwen model versions using Transformers library.
 * **FlanT5Wrapper:** Class containing LLM functionalities for FLAN-T5 model versions using Transformers library.
 * **BARTWrapper:** Class containing LLM functionalities for BART model versions using Transformers library.
 * **GPT2Wrapper:** Class containing LLM functionalities for GPT-2 decoder-only model versions using Transformers library.
@@ -104,6 +108,64 @@ The next sections provide further information about the models versions of each 
 ### Model Versions
 
 The next lines provide further information about the different model versions supported in the different model wrappers.
+
+#### Deepseek
+
+The `DeepseekWrapper` class allows managing the standard five model versions:
+* R1 Distilled Qwen 1.5B: `deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B`
+* R1 Distilled Qwen 7B: `deepseek-ai/DeepSeek-R1-Distill-Qwen-7B`
+* R1 Distilled Llama 8B: `deepseek-ai/DeepSeek-R1-Distill-Llama-8B`
+* R1 Distilled Qwen 14B: `deepseek-ai/DeepSeek-R1-Distill-Qwen-14B`
+* R1 Distilled Qwen 32B: `deepseek-ai/DeepSeek-R1-Distill-Qwen-32B`
+* R1 Distilled Llama 70B: `deepseek-ai/DeepSeek-R1-Distill-Llama-70B`
+
+By default, the wrapper initializes the class with the small version of distilled Qwen 1.5B but it can be selected on the constructor using the `DeepseekType` enumerator as shown in the next code snippet:
+
+```python
+from deepseek_wrapper.deepseek_wrapper import DeepseekType, DeepseekWrapper
+
+# Qwen small version
+deepseek_wrapper_qs = DeepseekWrapper(DeepseekType.R1_DISTILL_QWEN_SMALL)
+# Qwen base version
+deepseek_wrapper_qb = DeepseekWrapper(DeepseekType.R1_DISTILL_QWEN_BASE)
+# Llama base version
+deepseek_wrapper_lb = DeepseekWrapper(DeepseekType.R1_DISTILL_LLAMA_BASE)
+# Qwen large version
+deepseek_wrapper_ql = DeepseekWrapper(DeepseekType.R1_DISTILL_QWEN_LARGE)
+# Qwen XL version
+deepseek_wrapper_qxl = DeepseekWrapper(DeepseekType.R1_DISTILL_QWEN_XL)
+# Llama XL version
+deepseek_wrapper_lxl = DeepseekWrapper(DeepseekType.R1_DISTILL_LLAMA_XL)
+```
+
+#### Qwen
+
+The `QwenWrapper` class allows managing the standard five model versions:
+* Qwen 0.5B Instruct: `Qwen/Qwen2.5-0.5B-Instruct`
+* Qwen 1.5B Instruct: `Qwen/Qwen2.5-1.5B-Instruct`
+* Qwen 3B Instruct: `Qwen/Qwen2.5-3B-Instruct`
+* Qwen 7B Instruct: `Qwen/Qwen2.5-7B-Instruct`
+* Qwen 14B Instruct: `Qwen/Qwen2.5-14B-Instruct`
+* Qwen 72B Instruct: `Qwen/Qwen2.5-72B-Instruct`
+
+By default, the wrapper initializes the class with the smallest version of Qwen (0.5B) but it can be selected on the constructor using the `QwenType` enumerator as shown in the next code snippet:
+
+```python
+from qwen_wrapper.qwen_wrapper import QwenType, QwenWrapper
+
+# Qwen extra tiny version
+qwen_wrapper_xt = QwenWrapper(QwenType.XTINY)
+# Qwen tiny version
+qwen_wrapper_t = QwenWrapper(QwenType.TINY)
+# Qwen small version
+qwen_wrapper_s = QwenWrapper(QwenType.SMALL)
+# Qwen base version
+qwen_wrapper_b = QwenWrapper(QwenType.BASE)
+# Qwen large version
+qwen_wrapper_l = QwenWrapper(QwenType.LARGE)
+# Qwen XL version
+qwen_wrapper_xl = QwenWrapper(QwenType.XL)
+```
 
 #### FLAN-T5
 

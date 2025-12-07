@@ -6,9 +6,9 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
 class DeepseekType(Enum):
-    R1_DISTILL_QWEN_TINY = 1
+    R1_DISTILL_QWEN_SMALL = 1
     R1_DISTILL_QWEN_BASE = 2
-    R1_DISTILL_LLAMA = 3
+    R1_DISTILL_LLAMA_BASE = 3
     R1_DISTILL_QWEN_LARGE = 4
     R1_DISTILL_QWEN_XL = 5
     R1_DISTILL_LLAMA_XL = 6
@@ -16,15 +16,16 @@ class DeepseekType(Enum):
 
 class DeepseekWrapper:
 
-    def __init__(self, 
-                 model_type: DeepseekType = DeepseekType.R1_DISTILL_QWEN_TINY):
+    def __init__(self,
+                 model_type:
+                 DeepseekType = DeepseekType.R1_DISTILL_QWEN_SMALL):
         # Init vars
         qwen_type_names = {
-            DeepseekType.R1_DISTILL_QWEN_TINY:
+            DeepseekType.R1_DISTILL_QWEN_SMALL:
             "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
             DeepseekType.R1_DISTILL_QWEN_BASE:
             "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B",
-            DeepseekType.R1_DISTILL_LLAMA:
+            DeepseekType.R1_DISTILL_LLAMA_BASE:
             "deepseek-ai/DeepSeek-R1-Distill-Llama-8B",
             DeepseekType.R1_DISTILL_QWEN_LARGE:
             "deepseek-ai/DeepSeek-R1-Distill-Qwen-14B",
@@ -41,7 +42,7 @@ class DeepseekWrapper:
         self._RST = "\033[0m"
 
         # Check if CUDA available
-        if not torch.cuda.is_available():
+        if torch.cuda.is_available():
             print("CUDA available: GPU will be used")
             self._device = torch.device("cuda")
             print(f"CUDA device name: {torch.cuda.get_device_name(0)}")
