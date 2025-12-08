@@ -392,16 +392,6 @@ class QwenWrapper:
         )
 
         # Training args
-        # peft_training_args = TrainingArguments(
-        #     output_dir=trained_model_folder,
-        #     auto_find_batch_size=True,
-        #     num_train_epochs=num_train_epochs,
-        #     learning_rate=learning_rate,
-        #     logging_strategy="steps" if logging else "no",
-        #     logging_steps=10 if logging else 0,
-        #     save_strategy="epoch",
-        #     fp16=True
-        # )
         peft_training_args = TrainingArguments(
             output_dir=trained_model_folder,
             per_device_train_batch_size=1,
