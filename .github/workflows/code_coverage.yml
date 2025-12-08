@@ -67,7 +67,7 @@ jobs:
         curl -o coverage-badge.svg https://codecov.io/gh/aitor-ibarguren/llm_wrappers/branch/main/graph/badge.svg
         
         # Generate a coverage summary file locally
-        pytest --cov=. --cov-report=term-missing > coverage-summary.txt
+        coverage report -m > coverage-summary.txt
 
     - name: Commit coverage badge and summary
       run: |
