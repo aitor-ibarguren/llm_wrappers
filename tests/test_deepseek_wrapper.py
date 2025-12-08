@@ -15,7 +15,7 @@ class TestDeepseekWrapper(unittest.TestCase):
     def test_load_pretrained_model(self):
         # Create wrapper
         deepseek_wrapper = DeepseekWrapper(
-            model_type=DeepseekType.R1_DISTILL_QWEN_TINY)
+            model_type=DeepseekType.R1_DISTILL_QWEN_SMALL)
         # Check if pretrained model loads
         self.assertTrue(deepseek_wrapper.load_pretrained_model())
         # Check if multiple-loading detected
