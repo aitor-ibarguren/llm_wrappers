@@ -5,7 +5,7 @@ bart_wrapper/bart_wrapper.py             153     12    92%   35-37, 58, 88-90, 9
 deepseek_wrapper/__init__.py               0      0   100%
 deepseek_wrapper/deepseek_wrapper.py      85      8    91%   46-48, 69, 99-101, 105
 faiss_wrapper/__init__.py                  0      0   100%
-faiss_wrapper/faiss_wrapper.py           389     41    89%   87, 132-136, 149-151, 155-158, 165-167, 257-266, 402, 428-435, 454-455, 529-530, 534, 606-607, 612-613, 654-655, 662-663, 742-744, 746-748
+faiss_wrapper/faiss_wrapper.py           389     41    89%   87, 132-136, 149-151, 155-158, 165-167, 257-266, 402, 428-435, 454-455, 529-530, 534, 606-607, 612-613, 654-655, 662-663, 744-746, 748-750
 flan_t5_wrapper/__init__.py                0      0   100%
 flan_t5_wrapper/flan_t5_wrapper.py       156     12    92%   41-43, 64, 94-96, 100, 132-134, 141
 gpt2_wrapper/__init__.py                   0      0   100%
@@ -16,7 +16,7 @@ setup.py                                   2      2     0%   1-3
 tests/__init__.py                          0      0   100%
 tests/test_bart_wrapper.py                69      2    97%   6, 131
 tests/test_deepseek_wrapper.py            44      2    95%   6, 82
-tests/test_faiss_wrapper.py              120      2    98%   6, 244
+tests/test_faiss_wrapper.py              120      2    98%   6, 245
 tests/test_flan_t5_wrapper.py             69      2    97%   6, 131
 tests/test_gpt2_wrapper.py                69      2    97%   6, 134
 tests/test_qwen_wrapper.py                69      2    97%   6, 131
