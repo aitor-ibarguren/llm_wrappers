@@ -235,7 +235,8 @@ class TestFAISSWrapper(unittest.TestCase):
         self.assertTrue(
             faiss_wrapper.hybrid_search(
                 ["Can I buy guitar strings and picks?",
-                 "Have you got an online webstore?"]
+                 "Have you got an online webstore?",
+                 "Can I see monkeys in the moon?"]
             )
         )
 

@@ -671,8 +671,10 @@ class FAISSWrapper:
         # Normalize distances
         normalized_semantic_distances = [self._normalize_vals(
             sublist) for sublist in semantic_distances]
-        normalized_keyword_similarities = [self._normalize_vals(
-            sublist) for sublist in keyword_similarities]
+        normalized_keyword_similarities = [
+            self._normalize_vals(sublist) if sublist else []
+            for sublist in keyword_similarities
+        ]
 
         # Invert similarity to compare with distances
         normalized_keyword_similarities_inv = [
