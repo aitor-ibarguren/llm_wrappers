@@ -67,7 +67,8 @@ class FAISSWrapper:
         dimensions = self._model.get_sentence_embedding_dimension()
         print(f'Creating index with {dimensions} dimensions...')
 
-        self._index = faiss.IndexHNSWFlat(dimensions, 16)
+        self._index = faiss.IndexHNSWFlat(dimensions, 16,
+                                          faiss.METRIC_INNER_PRODUCT)
         self._texts = []
         self._tf_idf_vectorizer = None
         self._tfidf_matrix = None
@@ -578,7 +579,8 @@ class FAISSWrapper:
 
     def search(
             self, texts: list[str],
-            top_k: int = 5
+            top_k: int = 5,
+            threshold: float = 0.0
     ) -> tuple[bool, list[list[str]], list[list[float]]]:
         # Check if already initialized
         if not self._index_init:
@@ -588,18 +590,31 @@ class FAISSWrapper:
         # Texts into embedding
         embeddings = self._model.encode(texts, convert_to_numpy=True)
         # Search
-        distances, indices = self._index.search(embeddings, top_k)
+        distances, indexes = self._index.search(embeddings, top_k)
+
+        # Filter by threshold
+        f_distances = []
+        f_indexes = []
+
+        for dist, idx in zip(distances, indexes):
+            d = np.asarray(dist)
+            i = np.asarray(idx)
+            mask = d >= threshold
+            f_distances.append(d[mask].tolist())
+            f_indexes.append(i[mask].tolist())
+
         # Reconstruct
         output_texts = []
-        for row in indices:
+        for row in f_indexes:
             row_texts = [self._texts[i] for i in row]
             output_texts.append(row_texts)
 
-        return True, output_texts, distances
+        return True, output_texts, f_distances
 
     def search_by_keyword(
             self, texts: list[str],
-            top_k: int = 5
+            top_k: int = 5,
+            threshold: float = 0.0
     ) -> tuple[bool, list[list[str]], list[list[float]]]:
         # Check if already initialized
         if not self._index_init:
@@ -627,7 +642,7 @@ class FAISSWrapper:
             row_texts = []
             row_similarities = []
             for i in sorted_idx:
-                if similarity_vector[i] != 0:
+                if similarity_vector[i] > threshold:
                     row_texts.append(self._texts[i])
                     row_similarities.append(similarity_vector[i])
             # Insert in output list
@@ -637,6 +652,9 @@ class FAISSWrapper:
         return True, output_texts, output_similarities
 
     def _normalize_vals(self, distances: list[float]):
+        # Check if empty
+        if len(distances) == 0:
+            return []
         # Get min and max
         min_val, max_val = min(distances), max(distances)
         # Check if min and max are equal
@@ -647,7 +665,9 @@ class FAISSWrapper:
 
     def hybrid_search(
             self, texts: list[str],
-            top_k: int = 5, alpha: int = 0.6
+            top_k: int = 5, alpha: int = 0.6,
+            semantic_threshold: float = 0.0,
+            keyword_threshold: float = 0.0
     ) -> tuple[bool, list[list[str]], list[list[float]]]:
         # Check if already initialized
         if not self._index_init:
@@ -655,7 +675,11 @@ class FAISSWrapper:
             return False, [], []
 
         # Semantic search (top_k x 2 to ensure that a good combined search)
-        res, semantic_texts, semantic_distances = self.search(texts, 2 * top_k)
+        res, semantic_texts, semantic_distances = (
+            self.search(texts,
+                        2 * top_k,
+                        semantic_threshold)
+        )
 
         # Check result
         if not res:
@@ -665,7 +689,8 @@ class FAISSWrapper:
         # Keyword search (top_k x 2 to ensure that a good combined search)
         res, keyword_texts, keyword_similarities = self.search_by_keyword(
             texts,
-            2 * top_k
+            2 * top_k,
+            keyword_threshold
         )
 
         # Normalize distances

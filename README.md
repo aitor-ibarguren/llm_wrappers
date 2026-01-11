@@ -15,7 +15,7 @@
   </a>
 </p>
 
-This repository contains Python classes to load, manage, export, and fine-tune LLMs, facilitating their use in applications. Additionally, the repository includes complementary classes to simplify the developments of RAG and agentic systems. 
+This repository contains Python classes to load, manage, export, and fine-tune LLMs, facilitating their use in applications. Additionally, the repository includes complementary classes to simplify the development of RAG and agentic systems. 
 
 List of available classes:
 * **Generators**
@@ -67,7 +67,7 @@ pip install .
 
 ## Getting Started
 
-The current implementation offers a Python classes that act as wrappers to facilitate the management of Large Language Models, including the model loading and text generation, as well as advanced functionalities such as model training or efficient fine-tuning (PEFT-LoRA) for some of the LLM models.
+The current implementation offers Python classes that act as wrappers to facilitate the management of Large Language Models, including the model loading and text generation, as well as advanced functionalities such as model training or efficient fine-tuning (PEFT-LoRA) for some of the LLM models.
 
 A very basic example of the use of the *qwen_wrapper* Python class is shown below. This code snippet loads (downloads) the pre-trained `Qwen/Qwen2.5-0.5B-Instruct` model and generates text based on the text included in the `input` variable.
 
@@ -334,12 +334,12 @@ if __name__ == "__main__":
 
 The repository also offers a Python wrapper class to manage a retriever based on [FAISS](https://github.com/facebookresearch/faiss) library. This wrapper includes functions that facilitate the management of an external knowledge base implementented as a vector database. Particularly, the class includes functions for the next tasks:
 
-- Creatin of new indexes.
+- Creation of new indexes.
 - Saving and loading user created indexes.
-- Data loading in the index, including user defined strings or batch processing functions (loading data from a CSV file or PDFs from a folder). Batch processing functions also include chunking capabilitires.
-- Search functions.
+- Data loading in the index, including user defined strings or batch processing functions (loading data from a CSV file or PDFs from a folder). Batch processing functions also include chunking capabilities.
+- Search functions (semantic, keyword, and hybrid).
 
-The next code snippet provides an example of creating a rnew index, loading data from a CSV and a folder with PDFs, and finally saving the index for further use:
+The next code snippet provides an example of creating a new index, loading data from a CSV and a folder with PDFs, and finally saving the index for further use:
 
 ```python
 import os
@@ -372,17 +372,17 @@ if __name__ == '__main__':
 The processing functions include the capability to chunk the loaded data strings to facilitate its use in RAG systems. Namely, the processing functions include two parameters to tune the chunking opertation:
 
 - `chunk_size`: Number of characters of the chunk.
-- `chunk_overlap`: Number of characters overlaped in adjacent chunk.
+- `chunk_overlap`: Number of characters overlaped in adjacent chunks.
 
 ### Web Search Data
 
-Additionally, the wrapper includes a function to retrieve data from web searches and insert it (after chunkg) on the index. Particularly, the web search is carried out through [DuckDuckGo](https://duckduckgo.com/) as it does not require any API key.
+Additionally, the wrapper includes a function to retrieve data from web searches and insert it (after chunking) on the index. Particularly, the web search is carried out through [DuckDuckGo](https://duckduckgo.com/) as it does not require any API key.
 
 Even so, due to **legal and ethical issues**, the URLs are analysed to check that there is not any copyright mention or tag, skipping all searches that might be conflictive (only including Wikipedia or Creative Commons URLs). The retrieved information is chunked, before embedding it and inserted in the index.
 
 > **⚠️ Disclaimer:** This project includes code that performs web scraping for the purpose of retrieving publicly available information to supplement the RAG (Retrieval-Augmented Generation) system. Users are solely responsible for how they use this code.
 > Ensure you review and comply with the Terms of Service, robots.txt, and any applicable policies of any website you scrape.
-> No scraped data is included in this repository.
+> No scrapped data is included in this repository.
 
 ### Keyword & Hybrid Search
 
