@@ -141,7 +141,7 @@ class TestFAISSWrapper(unittest.TestCase):
         file_path = os.path.join(current_dir, 'data', 'shop_data.csv')
         self.assertTrue(faiss_wrapper.add_from_csv(
             file_path, 'shop data'))
-        # Search and check size
+        # Search and check size (threshold 0.0)
         res, output_texts, distances = faiss_wrapper.search([
             'Where is located the shop?',
             'What kind of musical instruments can I find in the shop?'
@@ -149,6 +149,14 @@ class TestFAISSWrapper(unittest.TestCase):
         self.assertTrue(res and len(output_texts) == 2 and len(distances) == 2)
         self.assertTrue(all(len(sublist) == 5 for sublist in output_texts))
         self.assertTrue(all(len(sublist) == 5 for sublist in distances))
+        # Search and check size (threshold 1.0)
+        res, output_texts, distances = faiss_wrapper.search([
+            'Where is located the shop?',
+            'What kind of musical instruments can I find in the shop?'
+        ], 5, 1.0)
+        self.assertTrue(res and len(output_texts) == 2 and len(distances) == 2)
+        self.assertTrue(all(len(sublist) == 0 for sublist in output_texts))
+        self.assertTrue(all(len(sublist) == 0 for sublist in distances))
 
     def test_save_load_index(self):
         # Create wrapper
@@ -213,7 +221,7 @@ class TestFAISSWrapper(unittest.TestCase):
         file_path = os.path.join(current_dir, 'data', 'shop_data.csv')
         self.assertTrue(faiss_wrapper.add_from_csv(
             file_path, 'shop data'))
-        # Try loading stored index
+        # Try keyword search
         self.assertTrue(
             faiss_wrapper.search_by_keyword(
                 ["Can I buy guitar strings and picks?",
@@ -231,14 +239,22 @@ class TestFAISSWrapper(unittest.TestCase):
         file_path = os.path.join(current_dir, 'data', 'shop_data.csv')
         self.assertTrue(faiss_wrapper.add_from_csv(
             file_path, 'shop data'))
-        # Try loading stored index
-        self.assertTrue(
-            faiss_wrapper.hybrid_search(
-                ["Can I buy guitar strings and picks?",
-                 "Have you got an online webstore?",
-                 "Can I see monkeys in the moon?"]
-            )
+        # Try hybrid search
+        res, texts, distances = faiss_wrapper.hybrid_search(
+            ["Can I buy guitar strings and picks?",
+             "Have you got an online webstore?",
+             "Can I see monkeys in the moon?"]
         )
+        self.assertTrue(res and len(texts) == len(distances))
+        # Try hybrid search (thresholds 1.0)
+        res, texts, distances = faiss_wrapper.hybrid_search(
+            ["Can I buy guitar strings and picks?",
+             "Have you got an online webstore?",
+             "Can I see monkeys in the moon?"], 5, 0.6, 1.0, 1.0
+        )
+        self.assertTrue(res and len(texts) == len(distances) and
+                        len(texts[0]) == 0 and len(texts[1]) == 0 and
+                        len(texts[2]) == 0)
 
 
 if __name__ == '__main__':
