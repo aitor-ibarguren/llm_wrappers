@@ -1,6 +1,7 @@
 import os
 import sys
 import unittest
+import time
 
 if __name__ == "__main__" or __package__ is None:
     sys.path.insert(
@@ -17,10 +18,14 @@ class TestQwenWrapper(unittest.TestCase):
     def test_load_pretrained_model(self):
         # Create wrapper
         qwen_wrapper = QwenWrapper(model_type=QwenType.TINY)
+        # Check unknown precision
+        self.assertFalse(qwen_wrapper.load_pretrained_model('invalid'))
         # Check if pretrained model loads
         self.assertTrue(qwen_wrapper.load_pretrained_model())
         # Check if multiple-loading detected
         self.assertFalse(qwen_wrapper.load_pretrained_model())
+
+        time.sleep(25.0)
 
     def test_save_and_load_model(self):
         # Create wrapper
