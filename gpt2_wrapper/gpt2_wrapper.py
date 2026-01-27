@@ -6,8 +6,8 @@ import torch
 from datasets import DatasetDict
 from peft import LoraConfig, PeftModel, TaskType, get_peft_model
 from transformers import (BitsAndBytesConfig, DataCollatorForLanguageModeling,
-                          GPT2LMHeadModel, GPT2Tokenizer,
-                          Trainer, TrainingArguments)
+                          GPT2LMHeadModel, GPT2Tokenizer, Trainer,
+                          TrainingArguments)
 
 
 class GPT2Type(Enum):
