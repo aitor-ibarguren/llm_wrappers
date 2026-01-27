@@ -17,6 +17,8 @@ class TestBARTWrapper(unittest.TestCase):
     def test_load_pretrained_model(self):
         # Create wrapper
         bart_wrapper = BARTWrapper(model_type=BARTType.BASE)
+        # Check unknown precision
+        self.assertFalse(bart_wrapper.load_pretrained_model('invalid'))
         # Check if pretrained model loads
         self.assertTrue(bart_wrapper.load_pretrained_model())
         # Check if multiple-loading detected

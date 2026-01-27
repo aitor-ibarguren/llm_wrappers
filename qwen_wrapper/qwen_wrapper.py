@@ -5,9 +5,9 @@ from typing import Literal
 import torch
 from datasets import DatasetDict
 from peft import LoraConfig, PeftModel, TaskType, get_peft_model
-from transformers import (AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig,
-                          DataCollatorForLanguageModeling, Trainer,
-                          TrainingArguments)
+from transformers import (AutoModelForCausalLM, AutoTokenizer,
+                          BitsAndBytesConfig, DataCollatorForLanguageModeling,
+                          Trainer, TrainingArguments)
 
 
 class QwenType(Enum):
@@ -50,8 +50,8 @@ class QwenWrapper:
             self._device = torch.device("cpu")
 
     def load_pretrained_model(
-            self,
-            precision: Literal["fp32", "fp16", "int8"] = "fp32"
+        self,
+        precision: Literal["fp32", "fp16", "int8"] = "fp32"
     ) -> bool:
         # Check precision
         if precision not in self._precision_vals:

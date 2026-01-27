@@ -17,6 +17,8 @@ class TestFlanT5Wrapper(unittest.TestCase):
     def test_load_pretrained_model(self):
         # Create wrapper
         gpt2_wrapper = GPT2Wrapper(model_type=GPT2Type.BASE)
+        # Check unknown precision
+        self.assertFalse(gpt2_wrapper.load_pretrained_model('invalid'))
         # Check if pretrained model loads
         self.assertTrue(gpt2_wrapper.load_pretrained_model())
         # Check if multiple-loading detected
