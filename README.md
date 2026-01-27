@@ -233,6 +233,30 @@ gpt2_wrapper_large = GPT2Wrapper(GPT2Type.LARGE)
 gpt2_wrapper_xl = GPT2Wrapper(GPT2Type.XL)
 ```
 
+### Model Precision
+
+It is possible to load the models with different precisions (the number of bits used to represent weights/activations). This precision value allows adjusting the LLM's numerical accuracy and model size in memory. Specifically, the loading functions of the wrappers include a precision parameter with the next values:
+
+* **fp32: Full 32-bit floating point, the highest numerical accuracy, but s**low and memory-heavy.
+* **fp16:** 16-bit floating point, faster and less memory consumption ***(default value)***.
+* **int8:** Quantized version, fast and cheap, with a slight accuracy drop.
+
+The next code snippet shows the loading of a Qwen model with different precisions:
+
+```python
+from gpt2_wrapper.gpt2_wrapper import GPT2Type, GPT2Wrapper
+
+# FP32
+qwen_wrapper = QwenWrapper(model_type=QwenType.BASE)
+qwen_wrapper.load_pretrained_model('fp32')
+# FP16
+qwen_wrapper = QwenWrapper(model_type=QwenType.BASE)
+qwen_wrapper.load_pretrained_model('fp16')
+# INT8
+qwen_wrapper = QwenWrapper(model_type=QwenType.BASE)
+qwen_wrapper.load_pretrained_model('int8')
+```
+
 ### Generation Function
 
 All wrapper classes include a generation function to produce text from user-provided input. Specifically, the `generate` function includes the following set of parameters:

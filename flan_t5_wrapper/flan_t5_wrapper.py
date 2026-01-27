@@ -49,7 +49,7 @@ class FlanT5Wrapper:
 
     def load_pretrained_model(
         self,
-        precision: Literal["fp32", "fp16", "int8"] = "fp32"
+        precision: Literal["fp32", "fp16", "int8"] = "fp16"
     ) -> bool:
         # Check precision
         if precision not in self._precision_vals:
@@ -93,7 +93,7 @@ class FlanT5Wrapper:
         return True
 
     def load_stored_model(self, folder: str,
-                          precision: Literal["fp32", "fp16", "int8"] = "fp32"
+                          precision: Literal["fp32", "fp16", "int8"] = "fp16"
                           ) -> bool:
         # Check precision
         if precision not in self._precision_vals:
@@ -149,7 +149,7 @@ class FlanT5Wrapper:
 
     def load_stored_peft_model(
         self, folder: str,
-        precision: Literal["fp32", "fp16", "int8"] = "fp32"
+        precision: Literal["fp32", "fp16", "int8"] = "fp16"
     ) -> bool:
         # Check precision
         if precision not in self._precision_vals:
