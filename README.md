@@ -241,6 +241,8 @@ It is possible to load the models with different precisions (the number of bits 
 * **fp16:** 16-bit floating point, faster and less memory consumption ***(default value)***.
 * **int8:** Quantized version, fast and cheap, with a slight accuracy drop.
 
+> :warning: The quantization reduces the model size, especially in decoder-only models (Deepseek, GPT-2, and Qwen), while adding an overhead in encoder-decoder models (BART and Flan T5). For memory size reduction, choose ‘fp16’ for the encoder-decoder models.
+
 The next code snippet shows the loading of a Qwen model with different precisions:
 
 ```python
