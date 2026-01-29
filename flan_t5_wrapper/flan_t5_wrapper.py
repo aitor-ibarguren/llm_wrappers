@@ -1,12 +1,13 @@
 import os
 from enum import Enum
+from typing import Literal
 
 import torch
 from datasets import DatasetDict
 from peft import LoraConfig, PeftModel, TaskType, get_peft_model
 from transformers import (AutoModelForSeq2SeqLM, AutoTokenizer,
-                          DataCollatorForSeq2Seq, Seq2SeqTrainer,
-                          Seq2SeqTrainingArguments)
+                          BitsAndBytesConfig, DataCollatorForSeq2Seq,
+                          Seq2SeqTrainer, Seq2SeqTrainingArguments)
 
 
 class FlanT5Type(Enum):
@@ -29,6 +30,7 @@ class FlanT5Wrapper:
             FlanT5Type.XXL: "google/flan-t5-XXL"
         }
         self._model_name = flan_t5_type_names[model_type]
+        self._precision_vals = ["fp32", "fp16", "int8"]
         self._model_init = False
         self._peft_model = False
 
@@ -45,7 +47,15 @@ class FlanT5Wrapper:
             print("CUDA not available: Using CPU")
             self._device = torch.device("cpu")
 
-    def load_pretrained_model(self) -> bool:
+    def load_pretrained_model(
+        self,
+        precision: Literal["fp32", "fp16", "int8"] = "fp16"
+    ) -> bool:
+        # Check precision
+        if precision not in self._precision_vals:
+            print(self._RED + "Precision value not valid" + self._RST)
+            return False
+
         # Check if already loaded
         if self._model_init:
             print(self._RED + "Model already loaded!" + self._RST)
@@ -55,7 +65,19 @@ class FlanT5Wrapper:
         print(f"Loading model '{self._model_name}'...")
 
         # Load model
-        self._model = AutoModelForSeq2SeqLM.from_pretrained(self._model_name)
+        kwargs = {}
+
+        if precision == "int8":
+            bnb_config = BitsAndBytesConfig(load_in_8bit=True)
+            kwargs["quantization_config"] = bnb_config
+        else:
+            dtype = torch.float16 if precision == "fp16" else torch.float32
+            kwargs["dtype"] = dtype
+
+        self._model = AutoModelForSeq2SeqLM.from_pretrained(
+            self._model_name,
+            **kwargs
+        )
         # Init tokenizer
         self._tokenizer = AutoTokenizer.from_pretrained(self._model_name)
 
@@ -70,7 +92,14 @@ class FlanT5Wrapper:
 
         return True
 
-    def load_stored_model(self, folder: str) -> bool:
+    def load_stored_model(self, folder: str,
+                          precision: Literal["fp32", "fp16", "int8"] = "fp16"
+                          ) -> bool:
+        # Check precision
+        if precision not in self._precision_vals:
+            print(self._RED + "Precision value not valid" + self._RST)
+            return False
+
         # Check if already loaded
         if self._model_init:
             print(self._RED + "Model already loaded!" + self._RST)
@@ -85,7 +114,19 @@ class FlanT5Wrapper:
                 raise FileNotFoundError(f"Folder '{folder}' not found")
 
             # Load model
-            self._model = AutoModelForSeq2SeqLM.from_pretrained(folder)
+            kwargs = {}
+
+            if precision == "int8":
+                bnb_config = BitsAndBytesConfig(load_in_8bit=True)
+                kwargs["quantization_config"] = bnb_config
+            else:
+                dtype = torch.float16 if precision == "fp16" else torch.float32
+                kwargs["dtype"] = dtype
+
+            self._model = AutoModelForSeq2SeqLM.from_pretrained(
+                folder,
+                **kwargs
+            )
             # Load tokenizer
             self._tokenizer = AutoTokenizer.from_pretrained(folder)
         except FileNotFoundError as e:
@@ -106,7 +147,15 @@ class FlanT5Wrapper:
 
         return True
 
-    def load_stored_peft_model(self, folder: str) -> bool:
+    def load_stored_peft_model(
+        self, folder: str,
+        precision: Literal["fp32", "fp16", "int8"] = "fp16"
+    ) -> bool:
+        # Check precision
+        if precision not in self._precision_vals:
+            print(self._RED + "Precision value not valid" + self._RST)
+            return False
+
         # Check if already loaded
         if self._model_init:
             print(self._RED + "Model already loaded!" + self._RST)
@@ -121,8 +170,18 @@ class FlanT5Wrapper:
                 raise FileNotFoundError(f"Folder '{folder}' not found")
 
             # Load model
+            kwargs = {}
+
+            if precision == "int8":
+                bnb_config = BitsAndBytesConfig(load_in_8bit=True)
+                kwargs["quantization_config"] = bnb_config
+            else:
+                dtype = torch.float16 if precision == "fp16" else torch.float32
+                kwargs["dtype"] = dtype
+
             self._base_model = AutoModelForSeq2SeqLM.from_pretrained(
-                self._model_name
+                self._model_name,
+                **kwargs
             )
             # Load tokenizer
             self._tokenizer = AutoTokenizer.from_pretrained(self._model_name)
@@ -304,7 +363,7 @@ class FlanT5Wrapper:
             args=training_args,
             train_dataset=tokenized_datasets["train"],  # subset for testing
             eval_dataset=tokenized_datasets["validation"],
-            tokenizer=self._tokenizer,
+            # tokenizer=self._tokenizer,
             data_collator=data_collator
         )
 

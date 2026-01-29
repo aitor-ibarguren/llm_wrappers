@@ -1,12 +1,13 @@
 import os
 from enum import Enum
+from typing import Literal
 
 import torch
 from datasets import DatasetDict
 from peft import LoraConfig, PeftModel, TaskType, get_peft_model
 from transformers import (AutoModelForCausalLM, AutoTokenizer,
-                          DataCollatorForLanguageModeling, Trainer,
-                          TrainingArguments)
+                          BitsAndBytesConfig, DataCollatorForLanguageModeling,
+                          Trainer, TrainingArguments)
 
 
 class QwenType(Enum):
@@ -31,6 +32,7 @@ class QwenWrapper:
             QwenType.XL: "Qwen/Qwen2.5-72B-Instruct",
         }
         self._model_name = qwen_type_names[model_type]
+        self._precision_vals = ["fp32", "fp16", "int8"]
         self._model_init = False
         self._peft_model = False
 
@@ -47,7 +49,15 @@ class QwenWrapper:
             print("CUDA not available: Using CPU")
             self._device = torch.device("cpu")
 
-    def load_pretrained_model(self) -> bool:
+    def load_pretrained_model(
+        self,
+        precision: Literal["fp32", "fp16", "int8"] = "fp16"
+    ) -> bool:
+        # Check precision
+        if precision not in self._precision_vals:
+            print(self._RED + "Precision value not valid" + self._RST)
+            return False
+
         # Check if already loaded
         if self._model_init:
             print(self._RED + "Model already loaded!" + self._RST)
@@ -57,7 +67,19 @@ class QwenWrapper:
         print(f"Loading model '{self._model_name}'...")
 
         # Load model
-        self._model = AutoModelForCausalLM.from_pretrained(self._model_name)
+        kwargs = {}
+
+        if precision == "int8":
+            bnb_config = BitsAndBytesConfig(load_in_8bit=True)
+            kwargs["quantization_config"] = bnb_config
+        else:
+            dtype = torch.float16 if precision == "fp16" else torch.float32
+            kwargs["dtype"] = dtype
+
+        self._model = AutoModelForCausalLM.from_pretrained(
+            self._model_name,
+            **kwargs
+        )
         # Init tokenizer
         self._tokenizer = AutoTokenizer.from_pretrained(self._model_name)
 
@@ -72,7 +94,14 @@ class QwenWrapper:
 
         return True
 
-    def load_stored_model(self, folder: str) -> bool:
+    def load_stored_model(self, folder: str,
+                          precision: Literal["fp32", "fp16", "int8"] = "fp16"
+                          ) -> bool:
+        # Check precision
+        if precision not in self._precision_vals:
+            print(self._RED + "Precision value not valid" + self._RST)
+            return False
+
         # Check if already loaded
         if self._model_init:
             print(self._RED + "Model already loaded!" + self._RST)
@@ -87,7 +116,19 @@ class QwenWrapper:
                 raise FileNotFoundError(f"Folder '{folder}' not found")
 
             # Load model
-            self._model = AutoModelForCausalLM.from_pretrained(folder)
+            kwargs = {}
+
+            if precision == "int8":
+                bnb_config = BitsAndBytesConfig(load_in_8bit=True)
+                kwargs["quantization_config"] = bnb_config
+            else:
+                dtype = torch.float16 if precision == "fp16" else torch.float32
+                kwargs["dtype"] = dtype
+
+            self._model = AutoModelForCausalLM.from_pretrained(
+                folder,
+                **kwargs
+            )
             # Load tokenizer
             self._tokenizer = AutoTokenizer.from_pretrained(folder)
         except FileNotFoundError as e:
@@ -108,7 +149,15 @@ class QwenWrapper:
 
         return True
 
-    def load_stored_peft_model(self, folder: str) -> bool:
+    def load_stored_peft_model(
+        self, folder: str,
+        precision: Literal["fp32", "fp16", "int8"] = "fp16"
+    ) -> bool:
+        # Check precision
+        if precision not in self._precision_vals:
+            print(self._RED + "Precision value not valid" + self._RST)
+            return False
+
         # Check if already loaded
         if self._model_init:
             print(self._RED + "Model already loaded!" + self._RST)
@@ -123,8 +172,18 @@ class QwenWrapper:
                 raise FileNotFoundError(f"Folder '{folder}' not found")
 
             # Load model
+            kwargs = {}
+
+            if precision == "int8":
+                bnb_config = BitsAndBytesConfig(load_in_8bit=True)
+                kwargs["quantization_config"] = bnb_config
+            else:
+                dtype = torch.float16 if precision == "fp16" else torch.float32
+                kwargs["dtype"] = dtype
+
             self._base_model = AutoModelForCausalLM.from_pretrained(
-                self._model_name
+                self._model_name,
+                **kwargs
             )
             # Load tokenizer
             self._tokenizer = AutoTokenizer.from_pretrained(self._model_name)
@@ -318,7 +377,6 @@ class QwenWrapper:
             args=training_args,
             train_dataset=tokenized_datasets["train"],  # subset for testing
             eval_dataset=tokenized_datasets["validation"],
-            tokenizer=self._tokenizer,
             data_collator=data_collator
         )
 

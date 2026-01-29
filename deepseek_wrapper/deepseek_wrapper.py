@@ -1,8 +1,10 @@
 import os
 from enum import Enum
+from typing import Literal
 
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import (AutoModelForCausalLM, AutoTokenizer,
+                          BitsAndBytesConfig)
 
 
 class DeepseekType(Enum):
@@ -35,6 +37,7 @@ class DeepseekWrapper:
             "deepseek-ai/DeepSeek-R1-Distill-Llama-70B",
         }
         self._model_name = qwen_type_names[model_type]
+        self._precision_vals = ["fp32", "fp16", "int8"]
         self._model_init = False
 
         # Output vars
@@ -50,7 +53,15 @@ class DeepseekWrapper:
             print("CUDA not available: Using CPU")
             self._device = torch.device("cpu")
 
-    def load_pretrained_model(self) -> bool:
+    def load_pretrained_model(
+        self,
+        precision: Literal["fp32", "fp16", "int8"] = "fp16"
+    ) -> bool:
+        # Check precision
+        if precision not in self._precision_vals:
+            print(self._RED + "Precision value not valid" + self._RST)
+            return False
+
         # Check if already loaded
         if self._model_init:
             print(self._RED + "Model already loaded!" + self._RST)
@@ -60,7 +71,19 @@ class DeepseekWrapper:
         print(f"Loading model '{self._model_name}'...")
 
         # Load model
-        self._model = AutoModelForCausalLM.from_pretrained(self._model_name)
+        kwargs = {}
+
+        if precision == "int8":
+            bnb_config = BitsAndBytesConfig(load_in_8bit=True)
+            kwargs["quantization_config"] = bnb_config
+        else:
+            dtype = torch.float16 if precision == "fp16" else torch.float32
+            kwargs["dtype"] = dtype
+
+        self._model = AutoModelForCausalLM.from_pretrained(
+            self._model_name,
+            **kwargs
+        )
         # Init tokenizer
         self._tokenizer = AutoTokenizer.from_pretrained(self._model_name)
 
@@ -75,7 +98,14 @@ class DeepseekWrapper:
 
         return True
 
-    def load_stored_model(self, folder: str) -> bool:
+    def load_stored_model(self, folder: str,
+                          precision: Literal["fp32", "fp16", "int8"] = "fp16"
+                          ) -> bool:
+        # Check precision
+        if precision not in self._precision_vals:
+            print(self._RED + "Precision value not valid" + self._RST)
+            return False
+
         # Check if already loaded
         if self._model_init:
             print(self._RED + "Model already loaded!" + self._RST)
@@ -90,7 +120,19 @@ class DeepseekWrapper:
                 raise FileNotFoundError(f"Folder '{folder}' not found")
 
             # Load model
-            self._model = AutoModelForCausalLM.from_pretrained(folder)
+            kwargs = {}
+
+            if precision == "int8":
+                bnb_config = BitsAndBytesConfig(load_in_8bit=True)
+                kwargs["quantization_config"] = bnb_config
+            else:
+                dtype = torch.float16 if precision == "fp16" else torch.float32
+                kwargs["dtype"] = dtype
+
+            self._model = AutoModelForCausalLM.from_pretrained(
+                folder,
+                **kwargs
+            )
             # Load tokenizer
             self._tokenizer = AutoTokenizer.from_pretrained(folder)
         except FileNotFoundError as e:

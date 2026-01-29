@@ -17,6 +17,8 @@ class TestFlanT5Wrapper(unittest.TestCase):
     def test_load_pretrained_model(self):
         # Create wrapper
         flan_t5_wrapper = FlanT5Wrapper(model_type=FlanT5Type.BASE)
+        # Check unknown precision
+        self.assertFalse(flan_t5_wrapper.load_pretrained_model('invalid'))
         # Check if pretrained model loads
         self.assertTrue(flan_t5_wrapper.load_pretrained_model())
         # Check if multiple-loading detected
