@@ -16,7 +16,7 @@ from qwen_wrapper.qwen_wrapper import QwenType, QwenWrapper
 class TestQwenWrapper(unittest.TestCase):
     def test_load_pretrained_model(self):
         # Create wrapper
-        qwen_wrapper = QwenWrapper(model_type=QwenType.TINY)
+        qwen_wrapper = QwenWrapper(model_type=QwenType.XTINY)
         # Check unknown precision
         self.assertFalse(qwen_wrapper.load_pretrained_model('invalid'))
         # Check if pretrained model loads
