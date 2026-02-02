@@ -59,28 +59,3 @@ jobs:
         fail_ci_if_error: true
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
-    - name: Fetch Codecov badge and coverage summary
-      run: |
-        # Download coverage badge SVG from Codecov
-        sleep 30
-        curl -o coverage-badge.svg https://codecov.io/gh/aitor-ibarguren/llm_wrappers/branch/main/graph/badge.svg
-        
-        # Generate a coverage summary file locally
-        coverage report -m > coverage-summary.txt
-
-    - name: Commit coverage badge and summary
-      run: |
-        git config user.name "github-actions[bot]"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
-
-        # Add files
-        git add coverage-badge.svg coverage-summary.txt
-
-        # Commit only if changes exist
-        if ! git diff --cached --quiet; then
-          git commit -m "Update coverage badge and summary [skip ci]"
-          git push origin HEAD:${GITHUB_REF#refs/heads/}
-        else
-          echo "No changes to commit"
-        fi

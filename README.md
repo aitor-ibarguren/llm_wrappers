@@ -8,7 +8,7 @@
     <img src="https://github.com/aitor-ibarguren/llm_wrappers/actions/workflows/isort.yml/badge.svg" alt="isort">
   </a>
   <a href="https://app.codecov.io/gh/aitor-ibarguren/llm_wrappers">
-    <img src="coverage-badge.svg" alt="Build">
+    <img src="https://codecov.io/gh/aitor-ibarguren/llm_wrappers/branch/main/graph/badge.svg" alt="codecov">
   </a>
   <a href="https://opensource.org/licenses/Apache-2.0">
     <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License">
