@@ -62,6 +62,8 @@ class DeepseekWrapper:
             print(self._RED + "Precision value not valid" + self._RST)
             return False
 
+        self._precision = precision
+
         # Check if already loaded
         if self._model_init:
             print(self._RED + "Model already loaded!" + self._RST)
@@ -86,9 +88,14 @@ class DeepseekWrapper:
         )
         # Init tokenizer
         self._tokenizer = AutoTokenizer.from_pretrained(self._model_name)
+        self._tokenizer.padding_side = "left"
+        self._tokenizer.pad_token = self._tokenizer.eos_token
+        self._model.generation_config.pad_token_id = (
+            self._tokenizer.eos_token_id
+        )
 
         # Model to GPU if available
-        if torch.cuda.is_available():
+        if torch.cuda.is_available() and self._precision != 'int8':
             self._model.to(self._device)
 
         self._model_init = True
@@ -105,6 +112,8 @@ class DeepseekWrapper:
         if precision not in self._precision_vals:
             print(self._RED + "Precision value not valid" + self._RST)
             return False
+
+        self._precision = precision
 
         # Check if already loaded
         if self._model_init:
@@ -135,6 +144,11 @@ class DeepseekWrapper:
             )
             # Load tokenizer
             self._tokenizer = AutoTokenizer.from_pretrained(folder)
+            self._tokenizer.padding_side = "left"
+            self._tokenizer.pad_token = self._tokenizer.eos_token
+            self._model.generation_config.pad_token_id = (
+                self._tokenizer.eos_token_id
+            )
         except FileNotFoundError as e:
             print(f"{self._RED}Folder not found: {e}{self._RST}")
             return False
@@ -143,7 +157,7 @@ class DeepseekWrapper:
             return False
 
         # Model to GPU if available
-        if torch.cuda.is_available():
+        if torch.cuda.is_available() and self._precision != 'int8':
             self._model.to(self._device)
 
         self._model_init = True
@@ -187,8 +201,15 @@ class DeepseekWrapper:
             return False, ""
 
         # Tokenize input text
-        input_tokenized = self._tokenizer(input_text,
-                                          return_tensors='pt').to(self._device)
+        if self._precision != 'int8':
+            input_tokenized = self._tokenizer(
+                input_text,
+                return_tensors='pt').to(self._device)
+        else:
+            input_tokenized = self._tokenizer(
+                input_text,
+                return_tensors='pt')
+            input_tokenized = input_tokenized.to("cuda")
 
         # Get generated output
         output_ids = self._model.generate(
@@ -218,10 +239,17 @@ class DeepseekWrapper:
             return False, ""
 
         # Tokenize input text
-        inputs_tokenized = self._tokenizer(input_texts, padding=True,
-                                           truncation=True,
-                                           return_tensors='pt'
-                                           ).to(self._device)
+        if self._precision != 'int8':
+            inputs_tokenized = self._tokenizer(input_texts, padding=True,
+                                               truncation=True,
+                                               return_tensors='pt'
+                                               ).to(self._device)
+        else:
+            inputs_tokenized = self._tokenizer(input_texts, padding=True,
+                                               truncation=True,
+                                               return_tensors='pt'
+                                               )
+            inputs_tokenized = inputs_tokenized.to("cuda")
 
         # Get generated output
         output_ids = self._model.generate(

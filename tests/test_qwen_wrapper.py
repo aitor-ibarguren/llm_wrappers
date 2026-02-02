@@ -67,7 +67,7 @@ class TestQwenWrapper(unittest.TestCase):
         # Create wrapper
         qwen_wrapper = QwenWrapper()
         # Check if pretrained model loads
-        self.assertTrue(qwen_wrapper.load_pretrained_model())
+        self.assertTrue(qwen_wrapper.load_pretrained_model('int8'))
         # Generate output
         res, output = qwen_wrapper.generate(input)
         print("INPUT: " + input)
@@ -116,7 +116,7 @@ class TestQwenWrapper(unittest.TestCase):
         save_folder = "./peft_trained_qwen_school_math"
         res = qwen_wrapper.peft_lora_train_model(dataset, "INSTRUCTION",
                                                  "RESPONSE", save_folder,
-                                                 0.05, 1e-4, True)
+                                                 0.05, 1e-4)
         self.assertTrue(res)
         # Load trained model
         peft_trained_qwen_wrapper = QwenWrapper()

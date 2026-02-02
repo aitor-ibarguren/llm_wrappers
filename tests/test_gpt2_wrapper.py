@@ -70,7 +70,7 @@ class TestFlanT5Wrapper(unittest.TestCase):
         # Create wrapper
         gpt2_wrapper = GPT2Wrapper()
         # Check if pretrained model loads
-        self.assertTrue(gpt2_wrapper.load_pretrained_model())
+        self.assertTrue(gpt2_wrapper.load_pretrained_model('int8'))
         # Generate output
         res, output = gpt2_wrapper.generate(input)
         print("INPUT: " + input)

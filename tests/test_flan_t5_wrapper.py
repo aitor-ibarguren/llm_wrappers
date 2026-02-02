@@ -67,7 +67,7 @@ class TestFlanT5Wrapper(unittest.TestCase):
         # Create wrapper
         flan_t5_wrapper = FlanT5Wrapper()
         # Check if pretrained model loads
-        self.assertTrue(flan_t5_wrapper.load_pretrained_model())
+        self.assertTrue(flan_t5_wrapper.load_pretrained_model('int8'))
         # Generate output
         res, output = flan_t5_wrapper.generate(input)
         print("INPUT: " + input)

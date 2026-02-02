@@ -67,7 +67,7 @@ class TestBARTWrapper(unittest.TestCase):
         # Create wrapper
         bart_wrapper = BARTWrapper()
         # Check if pretrained model loads
-        self.assertTrue(bart_wrapper.load_pretrained_model())
+        self.assertTrue(bart_wrapper.load_pretrained_model('int8'))
         # Generate output
         res, output = bart_wrapper.generate(input)
         print("INPUT: " + input)

@@ -58,6 +58,8 @@ class QwenWrapper:
             print(self._RED + "Precision value not valid" + self._RST)
             return False
 
+        self._precision = precision
+
         # Check if already loaded
         if self._model_init:
             print(self._RED + "Model already loaded!" + self._RST)
@@ -82,9 +84,11 @@ class QwenWrapper:
         )
         # Init tokenizer
         self._tokenizer = AutoTokenizer.from_pretrained(self._model_name)
+        self._tokenizer.padding_side = "left"
+        self._tokenizer.pad_token = self._tokenizer.eos_token
 
         # Model to GPU if available
-        if torch.cuda.is_available():
+        if torch.cuda.is_available() and self._precision != 'int8':
             self._model.to(self._device)
 
         self._model_init = True
@@ -101,6 +105,8 @@ class QwenWrapper:
         if precision not in self._precision_vals:
             print(self._RED + "Precision value not valid" + self._RST)
             return False
+
+        self._precision = precision
 
         # Check if already loaded
         if self._model_init:
@@ -131,6 +137,8 @@ class QwenWrapper:
             )
             # Load tokenizer
             self._tokenizer = AutoTokenizer.from_pretrained(folder)
+            self._tokenizer.padding_side = "left"
+            self._tokenizer.pad_token = self._tokenizer.eos_token
         except FileNotFoundError as e:
             print(f"{self._RED}Folder not found: {e}{self._RST}")
             return False
@@ -139,7 +147,7 @@ class QwenWrapper:
             return False
 
         # Model to GPU if available
-        if torch.cuda.is_available():
+        if torch.cuda.is_available() and self._precision != 'int8':
             self._model.to(self._device)
 
         self._model_init = True
@@ -157,6 +165,8 @@ class QwenWrapper:
         if precision not in self._precision_vals:
             print(self._RED + "Precision value not valid" + self._RST)
             return False
+
+        self._precision = precision
 
         # Check if already loaded
         if self._model_init:
@@ -187,6 +197,8 @@ class QwenWrapper:
             )
             # Load tokenizer
             self._tokenizer = AutoTokenizer.from_pretrained(self._model_name)
+            self._tokenizer.padding_side = "left"
+            self._tokenizer.pad_token = self._tokenizer.eos_token
         except FileNotFoundError as e:
             print(f"{self._RED}Folder not found: {e}{self._RST}")
             return False
@@ -198,7 +210,7 @@ class QwenWrapper:
         self._model = PeftModel.from_pretrained(self._base_model, folder)
 
         # Model to GPU if available
-        if torch.cuda.is_available():
+        if torch.cuda.is_available() and self._precision != 'int8':
             self._model.to(self._device)
 
         self._model_init = True
@@ -243,8 +255,15 @@ class QwenWrapper:
             return False, ""
 
         # Tokenize input text
-        input_tokenized = self._tokenizer(input_text,
-                                          return_tensors='pt').to(self._device)
+        if self._precision != 'int8':
+            input_tokenized = self._tokenizer(
+                input_text,
+                return_tensors='pt').to(self._device)
+        else:
+            input_tokenized = self._tokenizer(
+                input_text,
+                return_tensors='pt')
+            input_tokenized = input_tokenized.to("cuda")
 
         # Get generated output
         output_ids = self._model.generate(
@@ -274,10 +293,17 @@ class QwenWrapper:
             return False, ""
 
         # Tokenize input text
-        inputs_tokenized = self._tokenizer(input_texts, padding=True,
-                                           truncation=True,
-                                           return_tensors='pt'
-                                           ).to(self._device)
+        if self._precision != 'int8':
+            inputs_tokenized = self._tokenizer(input_texts, padding=True,
+                                               truncation=True,
+                                               return_tensors='pt'
+                                               ).to(self._device)
+        else:
+            inputs_tokenized = self._tokenizer(input_texts, padding=True,
+                                               truncation=True,
+                                               return_tensors='pt'
+                                               )
+            inputs_tokenized = inputs_tokenized.to("cuda")
 
         # Get generated output
         output_ids = self._model.generate(
@@ -325,6 +351,16 @@ class QwenWrapper:
         learning_rate: float = 1e-4,
         logging: bool = False
     ) -> bool:
+        # Check if precision is not 'int8'
+        if self._precision == 'int8':
+            print(self._RED + "Can not train quantized models!" + self._RST)
+            return False, ""
+
+        # Check if already loaded
+        if not self._model_init:
+            print(self._RED + "Model not loaded yet!" + self._RST)
+            return False, ""
+
         # Empty CUDA cache
         torch.cuda.empty_cache()
 
@@ -354,7 +390,7 @@ class QwenWrapper:
             "validation": tokenized_split_dataset["test"]
         })
 
-        # Memory ooptimization
+        # Memory optimization
         self._model.gradient_checkpointing_enable()
         self._model.config.use_cache = False
 
@@ -397,9 +433,18 @@ class QwenWrapper:
         label_column_id: str,
         trained_model_folder: str,
         num_train_epochs: int = 1,
-        learning_rate: float = 1e-4,
-        logging: bool = False
+        learning_rate: float = 1e-4
     ) -> bool:
+        # Check if precision is not 'int8'
+        if self._precision == 'int8':
+            print(self._RED + "Can not train quantized models!" + self._RST)
+            return False, ""
+
+        # Check if already loaded
+        if not self._model_init:
+            print(self._RED + "Model not loaded yet!" + self._RST)
+            return False, ""
+
         # Empty CUDA cache
         torch.cuda.empty_cache()
 
