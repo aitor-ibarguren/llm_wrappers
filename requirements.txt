@@ -1,3 +1,5 @@
+accelerate
+bitsandbytes
 bs4
 datasets
 ddgs
