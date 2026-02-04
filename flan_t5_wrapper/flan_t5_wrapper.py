@@ -253,7 +253,7 @@ class FlanT5Wrapper:
             input_tokenized = self._tokenizer(
                 input_text,
                 return_tensors='pt')
-            input_tokenized = input_tokenized.to("cuda")
+            input_tokenized = input_tokenized.to(self._device)
 
         # Get generated output
         output_ids = self._model.generate(
@@ -288,7 +288,7 @@ class FlanT5Wrapper:
                                                truncation=True,
                                                return_tensors='pt'
                                                )
-            inputs_tokenized = inputs_tokenized.to("cuda")
+            inputs_tokenized = inputs_tokenized.to(self._device)
 
         # Get generated output
         output_ids = self._model.generate(
