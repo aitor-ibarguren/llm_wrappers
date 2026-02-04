@@ -50,6 +50,8 @@ class BARTWrapper:
             print(self._RED + "Precision value not valid" + self._RST)
             return False
 
+        self._precision = precision
+
         # Check if already loaded
         if self._model_init:
             print(self._RED + "Model already loaded!" + self._RST)
@@ -76,7 +78,7 @@ class BARTWrapper:
         self._tokenizer = AutoTokenizer.from_pretrained(self._model_name)
 
         # Model to GPU if available
-        if torch.cuda.is_available():
+        if torch.cuda.is_available() and self._precision != 'int8':
             self._model.to(self._device)
 
         self._model_init = True
@@ -93,6 +95,8 @@ class BARTWrapper:
         if precision not in self._precision_vals:
             print(self._RED + "Precision value not valid" + self._RST)
             return False
+
+        self._precision = precision
 
         # Check if already loaded
         if self._model_init:
@@ -131,7 +135,7 @@ class BARTWrapper:
             return False
 
         # Model to GPU if available
-        if torch.cuda.is_available():
+        if torch.cuda.is_available() and self._precision != 'int8':
             self._model.to(self._device)
 
         self._model_init = True
@@ -149,6 +153,8 @@ class BARTWrapper:
         if precision not in self._precision_vals:
             print(self._RED + "Precision value not valid" + self._RST)
             return False
+
+        self._precision = precision
 
         # Check if already loaded
         if self._model_init:
@@ -190,7 +196,7 @@ class BARTWrapper:
         self._model = PeftModel.from_pretrained(self._base_model, folder)
 
         # Model to GPU if available
-        if torch.cuda.is_available():
+        if torch.cuda.is_available() and self._precision != 'int8':
             self._model.to(self._device)
 
         self._model_init = True
@@ -235,13 +241,21 @@ class BARTWrapper:
             return False, ""
 
         # Tokenize input text
-        input_tokenized = self._tokenizer(input_text,
-                                          return_tensors='pt').to(self._device)
+        if self._precision != 'int8':
+            input_tokenized = self._tokenizer(
+                input_text,
+                return_tensors='pt').to(self._device)
+        else:
+            input_tokenized = self._tokenizer(
+                input_text,
+                return_tensors='pt')
+            input_tokenized = input_tokenized.to(self._device)
 
         # Get generated output
         output_ids = self._model.generate(
             **input_tokenized,
             max_new_tokens=max_new_tokens,
+            do_sample=True,
             temperature=temperature,
             top_p=top_p
         )
@@ -265,15 +279,23 @@ class BARTWrapper:
             return False, ""
 
         # Tokenize input text
-        inputs_tokenized = self._tokenizer(input_texts, padding=True,
-                                           truncation=True,
-                                           return_tensors='pt'
-                                           ).to(self._device)
+        if self._precision != 'int8':
+            inputs_tokenized = self._tokenizer(input_texts, padding=True,
+                                               truncation=True,
+                                               return_tensors='pt'
+                                               ).to(self._device)
+        else:
+            inputs_tokenized = self._tokenizer(input_texts, padding=True,
+                                               truncation=True,
+                                               return_tensors='pt'
+                                               )
+            inputs_tokenized = inputs_tokenized.to(self._device)
 
         # Get generated output
         output_ids = self._model.generate(
             **inputs_tokenized,
             max_new_tokens=max_new_tokens,
+            do_sample=True,
             temperature=temperature,
             top_p=top_p
         )
@@ -315,6 +337,16 @@ class BARTWrapper:
         learning_rate: float = 1e-4,
         logging: bool = False
     ) -> bool:
+        # Check if precision is not 'int8'
+        if self._precision == 'int8':
+            print(self._RED + "Can not train quantized models!" + self._RST)
+            return False, ""
+
+        # Check if already loaded
+        if not self._model_init:
+            print(self._RED + "Model not loaded yet!" + self._RST)
+            return False, ""
+
         # Empty CUDA cache
         torch.cuda.empty_cache()
 
@@ -344,7 +376,7 @@ class BARTWrapper:
             "validation": tokenized_split_dataset["test"]
         })
 
-        # Memory ooptimization
+        # Memory optimization
         self._model.gradient_checkpointing_enable()
         self._model.config.use_cache = False
 
@@ -389,6 +421,16 @@ class BARTWrapper:
         learning_rate: float = 1e-4,
         logging: bool = False
     ) -> bool:
+        # Check if precision is not 'int8'
+        if self._precision == 'int8':
+            print(self._RED + "Can not train quantized models!" + self._RST)
+            return False, ""
+
+        # Check if already loaded
+        if not self._model_init:
+            print(self._RED + "Model not loaded yet!" + self._RST)
+            return False, ""
+
         # Empty CUDA cache
         torch.cuda.empty_cache()
 

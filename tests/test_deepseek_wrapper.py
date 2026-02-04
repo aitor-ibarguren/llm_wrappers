@@ -65,7 +65,7 @@ class TestDeepseekWrapper(unittest.TestCase):
         # Create wrapper
         deepseek_wrapper = DeepseekWrapper()
         # Check if pretrained model loads
-        self.assertTrue(deepseek_wrapper.load_pretrained_model())
+        self.assertTrue(deepseek_wrapper.load_pretrained_model('int8'))
         # Generate output
         res, output = deepseek_wrapper.generate(input)
         print("INPUT: " + input)
